@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>나트륨-칼륨 펌프 시뮬레이터</title>
+<style>
+:root{--bg:#07111f;--panel:#0e1d32;--line:#27405e;--text:#eaf3ff;--muted:#9fb2c8;--na:#ff6577;--k:#42a5ff;--atp:#ffc44d;--mem:#f3c84a;--protein:#a997ff}
+*{box-sizing:border-box} body{margin:0;color:var(--text);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 20% 0,#142b49,#07111f 55%);min-height:100vh}
+.app{max-width:1180px;margin:auto;padding:24px}.top{display:flex;gap:18px;align-items:end;justify-content:space-between;margin-bottom:16px}.top h1{font-size:clamp(25px,4vw,42px);margin:0}.top p{margin:6px 0 0;color:var(--muted)}
+.controls,.info{background:#0e1d32dd;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 48px #0005}.controls{padding:14px;display:flex;flex-wrap:wrap;gap:9px;align-items:center}.btn{border:0;border-radius:12px;padding:10px 15px;font-weight:800;cursor:pointer;background:#213b5b;color:white}.btn.primary{background:#3a7afe}.btn:hover{filter:brightness(1.12)}.btn:disabled{opacity:.45;cursor:not-allowed}.speed{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted)}input{accent-color:#75a7ff}
+.stage{position:relative;height:570px;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:linear-gradient(#173453 0 42%,#5d351f 42% 58%,#18273d 58%);box-shadow:0 24px 70px #0007;margin-top:14px}.label{position:absolute;left:20px;font-weight:900;letter-spacing:.08em;color:#cae5ff}.outside{top:16px}.inside{bottom:16px}.membrane{position:absolute;left:0;right:0;top:42%;height:16%;background:repeating-linear-gradient(90deg,#f7d65a 0 16px,#e8b62b 16px 24px);border-top:7px solid #ffe98d;border-bottom:7px solid #ffe98d;box-shadow:0 0 28px #f5ca4d55}.pump{position:absolute;z-index:5;left:50%;top:50%;width:220px;height:285px;transform:translate(-50%,-50%);filter:drop-shadow(0 18px 18px #0008)}
+.pumpBody{position:absolute;left:18px;top:8px;width:184px;height:270px;background:radial-gradient(circle at 32% 24%,#ddd7ff 0,#b5a7ed 34%,#8170c5 68%,#57458f 100%);border:4px solid #d9d2ff;border-radius:42% 38% 34% 36%/25% 28% 25% 30%;transition:clip-path .55s,border-radius .55s,transform .55s;box-shadow:inset 18px 0 25px #fff3,inset -18px -8px 25px #3c2a7a88}
+.pumpBody:before,.pumpBody:after{content:"";position:absolute;z-index:-1;top:38px;width:70px;height:190px;background:linear-gradient(145deg,#c5baf4,#6d5ab1);border:4px solid #d5ceff;box-shadow:inset 8px 2px 15px #fff3}
+.pumpBody:before{left:-34px;border-radius:58% 35% 50% 48%;transform:rotate(5deg)}.pumpBody:after{right:-34px;border-radius:35% 58% 48% 50%;transform:rotate(-5deg)}
+.cleft{position:absolute;left:72px;top:16px;width:40px;height:230px;background:linear-gradient(#30265f,#554595 50%,#30265f);border-radius:45% 45% 42% 42%;box-shadow:inset 0 0 15px #171032;transition:clip-path .55s}
+.pocket,.site{position:absolute;z-index:2;display:block;filter:drop-shadow(0 2px 2px #0005)}.pocket{left:35px;width:42px;height:29px;border-radius:50%;background:linear-gradient(#5369b3,#7e8ed0)}.p1{top:72px}.p2{top:116px}.p3{top:160px}.site{right:32px;width:0;height:0;border-left:19px solid transparent;border-right:19px solid transparent;border-bottom:32px solid #7573cd}.s1{top:82px}.s2{top:137px}
+.pump[data-state="open-in"] .pumpBody{clip-path:polygon(0 0,42% 8%,50% 19%,58% 8%,100% 0,100% 100%,60% 87%,51% 76%,40% 87%,0 100%)}
+.pump[data-state="open-in"] .cleft{clip-path:polygon(23% 18%,77% 18%,100% 100%,0 100%)}
+.pump[data-state="open-out"] .pumpBody{clip-path:polygon(0 0,39% 14%,50% 28%,61% 14%,100% 0,100% 100%,58% 92%,50% 80%,42% 92%,0 100%)}
+.pump[data-state="open-out"] .cleft{clip-path:polygon(0 0,100% 0,76% 82%,24% 82%)}
+.pump[data-state="closed"] .pumpBody{clip-path:polygon(0 4%,40% 8%,50% 13%,60% 8%,100% 4%,96% 96%,60% 91%,50% 84%,40% 91%,4% 96%)}
+.pump[data-state="closed"] .cleft{clip-path:polygon(25% 8%,75% 8%,64% 92%,36% 92%)}
+.energyMol{position:absolute;z-index:14;display:grid;place-items:center;font-weight:1000;letter-spacing:.03em;box-shadow:0 8px 18px #0007;transition:left .7s ease,top .7s ease,opacity .3s,transform .7s ease}.atpMol{width:72px;height:72px;left:79%;top:76%;color:#633600;background:#ffc13c;clip-path:polygon(50% 0,61% 25%,85% 8%,79% 36%,100% 41%,78% 56%,94% 79%,66% 73%,58% 100%,45% 76%,20% 94%,27% 65%,0 59%,24% 47%,8% 23%,37% 29%)}.adpMol{width:58px;height:38px;left:88%;top:83%;opacity:0;border:2px solid #ffd98a;border-radius:50%;color:#ffe1a6;background:#79501b}.piMol{width:43px;height:43px;left:84%;top:73%;opacity:0;border-radius:50%;color:#6b4300;background:#fff0bd;border:2px solid #e6b343}
+.ion{position:absolute;z-index:10;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:900;border:2px solid #fff9;box-shadow:inset 0 -7px 12px #0003,0 7px 14px #0005;transition:left .65s ease,top .65s ease,opacity .25s,transform .4s}.na{background:var(--na)}.k{background:var(--k)}.ion sup{font-size:10px}.particle{position:absolute;width:10px;height:10px;border-radius:50%;opacity:.45}.particle.na{background:var(--na)}.particle.k{background:var(--k)}
+.badge{position:absolute;z-index:12;border-radius:12px;padding:7px 10px;font-weight:900;box-shadow:0 7px 14px #0005}.phos{left:calc(50% + 72px);top:58%;background:#fff2c7;color:#7b4b00;border:2px solid #efb641}.atp{right:22px;bottom:20px;background:#2a2519;border:1px solid #69511e;color:#ffd56f;max-width:210px}.arrow{position:absolute;z-index:4;font-size:34px;color:white;text-shadow:0 2px 8px #000;opacity:0;transition:.25s}.arrow.show{opacity:1;transform:translateY(-8px)}
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}.card{padding:15px}.card b{font-size:25px;display:block}.card span{font-size:12px;color:var(--muted)}.status{grid-column:span 2}.status b{font-size:18px}.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:13px}.dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:5px}
+.note{margin:14px 2px;color:var(--muted);font-size:13px;line-height:1.6}@media(max-width:720px){.stage{height:520px}.dashboard{grid-template-columns:1fr 1fr}.status{grid-column:span 2}.speed{width:100%;margin-left:0}.pump{transform:translate(-50%,-50%) scale(.78)}}
+</style></head>
+<body><main class="app">
+<div class="top"><div><h1>Na⁺/K⁺-ATPase 시뮬레이터</h1><p>ATP 1개로 Na⁺ 3개를 세포 밖으로, K⁺ 2개를 세포 안으로 운반합니다.</p></div></div>
+<section class="controls"><button class="btn primary" id="step">다음 단계</button><button class="btn" id="auto">자동 재생</button><button class="btn" id="reset">초기화</button><div class="speed">느리게 <input id="speed" type="range" min="450" max="1800" value="1000" step="50"> 빠르게</div></section>
+<section class="stage" id="stage"><div class="label outside">세포 밖 · Na⁺ 높음</div><div class="membrane"></div><div class="label inside">세포 안 · K⁺ 높음</div><div class="pump" id="pump" data-state="open-in">
+  <div class="pumpBody"><div class="cleft"></div><i class="pocket p1"></i><i class="pocket p2"></i><i class="pocket p3"></i><i class="site s1"></i><i class="site s2"></i></div>
+</div><div class="energyMol atpMol" id="atpMol">ATP</div><div class="energyMol adpMol" id="adpMol">ADP</div><div class="energyMol piMol" id="piMol">Pᵢ</div><div class="badge phos" id="phos" hidden>P</div><div class="badge atp" id="energy">ATP 준비</div><div class="arrow" id="upArrow" style="left:47%;top:25%">↑</div><div class="arrow" id="downArrow" style="left:52%;top:68%">↓</div></section>
+<section class="dashboard"><div class="info card"><b id="cycle">0</b><span>완료 주기</span></div><div class="info card"><b id="atpCount">0</b><span>소모 ATP</span></div><div class="info card"><b id="naCount">0</b><span>밖으로 이동한 Na⁺</span></div><div class="info card"><b id="kCount">0</b><span>안으로 이동한 K⁺</span></div><div class="info card status"><b id="stateTitle">1. 세포 안쪽으로 열린 펌프</b><span id="stateText">세포질의 Na⁺ 3개가 펌프에 결합하며 ATP가 세포 안쪽에서 접근합니다.</span><div class="legend"><span><i class="dot" style="background:var(--na)"></i>Na⁺</span><span><i class="dot" style="background:var(--k)"></i>K⁺</span><span><i class="dot" style="background:var(--atp)"></i>ATP/인산화</span></div></div></section>
+<p class="note">교육용 개념 모델입니다. 실제 단백질의 구조 변화와 반응 속도론을 단순화했으며, 순수한 전하 기준으로 한 주기마다 세포 밖으로 +1의 순전하가 이동하는 전기발생성 수송을 표현합니다.</p>
+</main><script>
+const $=s=>document.querySelector(s),stage=$('#stage'),pump=$('#pump');let step=0,timer=null,cycles=0;
+const states=[
+['1. Na⁺ 3개 결합','세포 안의 Na⁺ 3개가 안쪽으로 열린 펌프에 결합합니다.','open-in'],
+['2. ATP 가수분해 · 인산화','ATP가 ADP로 바뀌며 인산기가 펌프에 결합합니다.','closed'],
+['3. Na⁺ 방출','구조가 바뀌어 세포 밖으로 열리고 Na⁺ 3개가 방출됩니다.','open-out'],
+['4. K⁺ 2개 결합','세포 밖의 K⁺ 2개가 펌프에 결합합니다.','open-out'],
+['5. 탈인산화','인산기가 떨어지며 펌프가 원래 구조로 돌아갑니다.','closed'],
+['6. K⁺ 방출','세포 안쪽으로 열린 펌프가 K⁺ 2개를 세포질에 방출합니다.','open-in']];
+let ions=[];function addIon(type,x,y,id){let e=document.createElement('div');e.className='ion '+type;e.id=id;e.innerHTML=type==='na'?'Na<sup>+</sup>':'K<sup>+</sup>';e.style.left=x+'%';e.style.top=y+'%';stage.appendChild(e);ions.push(e);return e}
+function bg(){for(let i=0;i<34;i++){let e=document.createElement('i'),type=Math.random()<.55?'na':'k';e.className='particle '+type;e.style.left=2+Math.random()*96+'%';e.style.top=(type==='na'?5+Math.random()*30:64+Math.random()*30)+'%';stage.appendChild(e)}}
+function build(){ions.forEach(e=>e.remove());ions=[];addIon('na',35,75,'na1');addIon('na',43,82,'na2');addIon('na',57,77,'na3');addIon('k',36,12,'k1');addIon('k',61,18,'k2');render()}
+function pos(id,x,y,op=1){let e=$('#'+id);e.style.left=x+'%';e.style.top=y+'%';e.style.opacity=op}
+function render(){let s=states[step];$('#stateTitle').textContent=s[0];$('#stateText').textContent=s[1];pump.dataset.state=s[2];$('#phos').hidden=!(step===1||step===2||step===3);$('#upArrow').classList.toggle('show',step===2);$('#downArrow').classList.toggle('show',step===5);$('#energy').textContent=step===1?'ATP → ADP + Pᵢ':step===4?'Pᵢ 방출':'ATP 준비';
+const atp=$('#atpMol'),adp=$('#adpMol'),pi=$('#piMol'); if(step===0){atp.style.left='79%';atp.style.top='76%';atp.style.opacity=1;atp.style.transform='scale(1)';adp.style.opacity=0;pi.style.opacity=0} if(step===1){atp.style.left='56%';atp.style.top='67%';atp.style.opacity=.15;atp.style.transform='scale(.55) rotate(120deg)';adp.style.left='39%';adp.style.top='76%';adp.style.opacity=1;pi.style.left='55%';pi.style.top='58%';pi.style.opacity=1} if(step===2||step===3){adp.style.left='29%';adp.style.top='84%';adp.style.opacity=step===2?1:.25;pi.style.left='55%';pi.style.top='58%';pi.style.opacity=1;atp.style.opacity=0} if(step===4){pi.style.left='67%';pi.style.top='70%';pi.style.opacity=1;pi.style.transform='translate(30px,25px) scale(.8)';adp.style.opacity=0} if(step===5){pi.style.opacity=0;atp.style.opacity=0;adp.style.opacity=0;pi.style.transform='none'};
+if(step===0){pos('na1',47,55);pos('na2',49,48);pos('na3',51,55);pos('k1',36,12);pos('k2',61,18)}
+if(step===1){pos('na1',47,46);pos('na2',49,39);pos('na3',51,46)}
+if(step===2){pos('na1',40,15);pos('na2',49,9);pos('na3',58,15)}
+if(step===3){pos('k1',47,35);pos('k2',51,35)}
+if(step===4){pos('k1',47,46);pos('k2',51,46)}
+if(step===5){pos('k1',42,76);pos('k2',57,80);pos('na1',40,15,0);pos('na2',49,9,0);pos('na3',58,15,0)} }
+function next(){step++;if(step>5){step=0;cycles++;$('#cycle').textContent=cycles;$('#atpCount').textContent=cycles;$('#naCount').textContent=cycles*3;$('#kCount').textContent=cycles*2;build();return}render()}
+$('#step').onclick=next;$('#auto').onclick=function(){if(timer){clearInterval(timer);timer=null;this.textContent='자동 재생'}else{timer=setInterval(next,2250-Number($('#speed').value));this.textContent='일시 정지'}};$('#speed').oninput=()=>{if(timer){clearInterval(timer);timer=setInterval(next,2250-Number($('#speed').value))}};$('#reset').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('#auto').textContent='자동 재생'}step=cycles=0;['cycle','atpCount','naCount','kCount'].forEach(id=>$('#'+id).textContent=0);build()};bg();build();
+</script></body></html>

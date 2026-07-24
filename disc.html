@@ -1,0 +1,2362 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DISC 팀빌딩 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-page:#F6F4EC;
+    --bg-card:#FFFFFF;
+    --bg-card-alt:#FBFAF5;
+    --border:#E6E2D6;
+    --border-soft:#EFEBE0;
+    --text-primary:#2B2820;
+    --text-secondary:#7A7566;
+    --text-faint:#A29C8B;
+    --accent:#D97757;
+    --accent-dark:#BE5E3F;
+    --accent-soft:#F3E3D8;
+    --accent-softer:#FAF1EA;
+    --shadow-sm:0 1px 1px rgba(43,40,32,0.03);
+    --shadow-md:0 4px 14px rgba(43,40,32,0.07);
+    --shadow-lg:0 10px 32px rgba(43,40,32,0.12);
+    --radius:18px;
+    --radius-sm:14px;
+    --gap: clamp(10px, 1vw, 18px);
+    --c-D:#D2694A;
+    --c-I:#DCA430;
+    --c-S:#4F9A6C;
+    --c-C:#4E7BAC;
+    --c-B:#8D76BE;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg-page);
+    color:var(--text-primary);
+    font-family:'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  }
+  h1,h2,h3,.serif{font-family:'Noto Serif KR', serif;}
+  button{font-family:inherit;}
+  ::selection{background:var(--accent-soft);}
+
+  /* ---------- Flat icons ---------- */
+  .icon{width:15px;height:15px;flex:0 0 auto;display:inline-block;}
+  .app-header h1{display:flex;align-items:center;gap:10px;}
+  .brand-badge{
+    width:34px;height:34px;border-radius:11px;flex:0 0 auto;
+    background:linear-gradient(155deg,var(--accent),var(--accent-dark));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px rgba(190,94,63,0.28);
+  }
+  .brand-badge .icon{width:19px;height:19px;color:#fff;}
+  .type-ic{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:1px;flex:0 0 auto;}
+  .panel-close .icon{width:14px;height:14px;}
+
+  /* ---------- Header ---------- */
+  .app-header{
+    flex:0 0 auto;
+    padding:clamp(10px,1.6vh,20px) clamp(18px,2vw,32px) clamp(8px,1.2vh,14px);
+    display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+    flex-wrap:wrap;
+  }
+  .app-header h1{font-size:clamp(18px,1.5vw,24px);font-weight:700;margin:0 0 3px;letter-spacing:-0.3px;}
+  .app-header p{margin:0;color:var(--text-secondary);font-size:clamp(11.5px,0.85vw,13.5px);}
+  .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  .sync-row{display:flex;align-items:center;gap:10px;}
+  .sync-badge{
+    display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-secondary);
+    background:var(--bg-card);border:1px solid var(--border);padding:6px 12px;border-radius:999px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);}
+  .dot.live{background:#5FA777;box-shadow:0 0 0 3px rgba(95,167,119,0.2);}
+  .btn{
+    border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);
+    padding:8px 14px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;
+    transition:all .15s ease; display:inline-flex;align-items:center;gap:6px;
+    text-decoration:none;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-softer);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff;}
+  .btn.small{padding:5px 10px;font-size:12px;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .settings-pop{
+    display:none;position:absolute;right:32px;top:66px;background:var(--bg-card);
+    border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);
+    padding:16px;width:340px;z-index:60;
+  }
+  .settings-pop.open{display:block;}
+  .settings-pop label{font-size:12.5px;font-weight:600;color:var(--text-secondary);}
+  .settings-pop input{
+    width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:10px;
+    margin:6px 0 10px;font-size:12.5px;
+  }
+  .settings-pop .hint{font-size:11.5px;color:var(--text-faint);line-height:1.5;margin-top:6px;}
+
+  /* ---------- Privacy lock ---------- */
+  #privacyBtn.unlocked{background:var(--accent-softer);border-color:var(--accent);color:var(--accent-dark);}
+  .modal-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(43,40,32,0.4);
+    align-items:center;justify-content:center;z-index:200;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal-card{
+    background:var(--bg-card);border-radius:var(--radius);padding:24px;width:300px;
+    box-shadow:var(--shadow-lg);border:1px solid var(--border);
+  }
+  .modal-card h3{margin:0 0 4px;font-size:17px;}
+  .modal-card .sub{font-size:12.5px;color:var(--text-secondary);margin:0 0 12px;}
+  .modal-card input{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;
+    font-size:15px;letter-spacing:2px;text-align:center;
+  }
+  .modal-card input:focus{outline:none;border-color:var(--accent);}
+  .privacy-error{font-size:12px;color:#B3452E;font-weight:700;margin-top:8px;}
+
+  /* ---------- Help modal ---------- */
+  .modal-card.wide{width:min(560px, 90vw);max-height:85vh;overflow-y:auto;position:relative;}
+  .modal-x{
+    position:absolute;right:16px;top:16px;width:28px;height:28px;border-radius:50%;
+    border:1px solid var(--border);background:var(--bg-card);cursor:pointer;color:var(--text-secondary);
+    display:flex;align-items:center;justify-content:center;font-size:13px;
+  }
+  .modal-x:hover{background:var(--accent-soft);color:var(--accent-dark);border-color:var(--accent);}
+  .help-steps{display:flex;flex-direction:column;gap:14px;margin-top:14px;}
+  .help-step{display:flex;gap:12px;}
+  .hs-num{
+    flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;
+    font-family:'Noto Serif KR',serif;
+  }
+  .hs-body{flex:1;min-width:0;}
+  .hs-title{font-weight:800;font-size:13.5px;margin-bottom:3px;}
+  .hs-body p{margin:0 0 8px;font-size:12.5px;line-height:1.6;color:var(--text-secondary);}
+
+  /* ---------- DISC 설명 모달 ---------- */
+  .disc-diagram{margin:16px 0 14px;}
+  .dd-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:3px;border-radius:12px;overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .dd-cell{padding:14px 10px;text-align:center;}
+  .dd-label{font-weight:800;font-size:13px;margin-bottom:2px;}
+  .dd-sub{font-size:10.5px;color:var(--text-secondary);}
+  .dd-caption{font-size:10.5px;color:var(--text-faint);text-align:center;margin-top:8px;line-height:1.5;}
+  .disc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 16px;}
+  .dt-card{background:var(--bg-card-alt);border:1px solid var(--border);border-left:3px solid;border-radius:10px;padding:9px 11px;}
+  .dt-head{font-weight:800;font-size:12.5px;margin-bottom:3px;}
+  .dt-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.5;}
+  @media(max-width:480px){ .disc-type-grid{grid-template-columns:1fr;} .disc-type-grid .dt-card{grid-column:auto !important;} }
+  .tip-box{
+    background:var(--accent-softer);border:1px solid var(--accent-soft);border-radius:12px;
+    padding:14px 16px;margin-top:4px;
+  }
+  .tip-title{font-weight:800;font-size:13.5px;margin-bottom:8px;}
+  .tip-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;}
+  .tip-list li{font-size:11.5px;line-height:1.6;color:var(--text-primary);}
+
+  /* ---------- Tabs ---------- */
+  .tab-bar{
+    flex:0 0 auto;
+    display:flex;gap:6px;padding:0 clamp(18px,2vw,32px);border-bottom:1px solid var(--border-soft);
+    flex-wrap:wrap;
+  }
+  .tab-btn{
+    border:none;background:transparent;padding:9px 16px;font-size:13.5px;font-weight:700;
+    color:var(--text-secondary);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;
+    border-radius:10px 10px 0 0;
+    transition:all .15s ease;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;
+  }
+  .tab-btn:hover{color:var(--text-primary);background:var(--bg-card-alt);}
+  .tab-btn.active{color:var(--accent-dark);border-bottom-color:var(--accent);background:var(--accent-softer);}
+
+  /* ---------- Layout / split panel ---------- */
+  .layout-wrap{flex:1 1 auto;min-height:0;display:flex;width:100%;position:relative;overflow:hidden;}
+  .content-area{
+    width:100%;height:100%;overflow-y:auto;overflow-x:hidden;
+    padding:clamp(10px,1.4vh,18px) clamp(18px,2vw,32px);
+    transition:width .45s cubic-bezier(.22,.68,0,1.01);
+    min-width:0;
+  }
+  .layout-wrap.panel-open .content-area{width:70%;}
+  .detail-panel{
+    width:0;flex-shrink:0;overflow:hidden;
+    border-left:1px solid var(--border);background:var(--bg-card-alt);
+    transition:width .45s cubic-bezier(.22,.68,0,1.01);
+    height:100%;
+  }
+  .layout-wrap.panel-open .detail-panel{width:30%;}
+  .detail-panel-inner{width:100%;min-width:320px;padding:22px;opacity:0;transform:translateX(16px);transition:all .35s ease .1s;height:100%;overflow-y:auto;}
+  .layout-wrap.panel-open .detail-panel-inner{opacity:1;transform:translateX(0);}
+
+  .tab-panel{display:none;height:100%;min-height:0;animation:fadeIn .3s ease;}
+  .tab-panel.active{display:flex;flex-direction:column;gap:var(--gap);}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  /* ---------- Cards / grid ---------- */
+  .grid{display:grid;gap:var(--gap);}
+  .grid-2{grid-template-columns:1.15fr 0.85fr;}
+  .grid.fill{flex:1;min-height:0;}
+  .grid.fill .card{display:flex;flex-direction:column;min-height:0;}
+  .card{
+    background:linear-gradient(180deg,#FFFFFF,#FCFAF4);border:1px solid var(--border);border-radius:var(--radius);
+    padding:clamp(14px,1.4vw,22px);box-shadow:0 2px 10px rgba(43,40,32,0.05), 0 1px 2px rgba(43,40,32,0.04);
+  }
+  .card h3{margin:0 0 3px;font-size:clamp(14.5px,1.05vw,16.5px);font-weight:800;flex:0 0 auto;letter-spacing:-.1px;}
+  .sub{font-size:clamp(11.5px,0.8vw,13px);color:var(--text-secondary);margin:0 0 10px;line-height:1.4;font-weight:500;}
+  .card .sub{flex:0 0 auto;}
+  .chart-box{flex:1;min-height:0;position:relative;width:100%;}
+
+  .stat-row{flex:0 0 auto;display:flex;gap:10px;flex-wrap:wrap;}
+  .stat-chip{
+    background:var(--accent-softer);border:1px solid var(--accent-soft);border-left:3px solid var(--accent);border-radius:12px;
+    padding:8px 14px;flex:1;min-width:100px;
+  }
+  .stat-chip .num{font-size:19px;font-weight:800;color:var(--accent-dark);font-family:'Noto Serif KR',serif;}
+  .stat-chip .lab{font-size:11.5px;color:var(--text-secondary);margin-top:1px;white-space:nowrap;font-weight:600;}
+
+  canvas{max-width:100%;}
+
+  /* ---------- Filter buttons (group tab) ---------- */
+  .filter-row{flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .chip-btn{
+    border:1px solid var(--border);background:var(--bg-card);padding:6px 15px;border-radius:999px;
+    font-size:12.5px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all .15s;
+  }
+  .chip-btn:hover{border-color:var(--accent);}
+  .chip-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* ---------- Individual tab ---------- */
+  .search-box{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:8px;background:var(--bg-card-alt);border:1px solid var(--border);
+    border-radius:12px;padding:9px 14px;margin-bottom:8px;
+  }
+  .search-box input{border:none;outline:none;font-size:13.5px;width:100%;background:transparent;color:var(--text-primary);}
+  .list-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:2px;}
+  .student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .student-card{
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;
+    cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(43,40,32,0.04);
+  }
+  .student-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--accent);}
+  .student-card .name{font-weight:800;font-size:14.5px;margin-bottom:2px;}
+  .student-card .grp{font-size:11.5px;color:var(--text-secondary);margin-bottom:9px;font-weight:600;}
+  .type-badge{
+    display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;
+    padding:4px 10px;border-radius:999px;
+  }
+
+  /* ---------- Detail panel content ---------- */
+  .panel-close{
+    position:absolute;right:16px;top:16px;width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--border);background:var(--bg-card);cursor:pointer;font-size:15px;
+    display:flex;align-items:center;justify-content:center;color:var(--text-secondary);
+  }
+  .panel-close:hover{background:var(--accent-soft);color:var(--accent-dark);border-color:var(--accent);}
+  .panel-head{margin-bottom:18px;}
+  .panel-head .pid{font-size:11.5px;color:var(--text-faint);font-weight:600;}
+  .panel-head h2{font-size:22px;margin:4px 0 6px;}
+  .coord-row{display:flex;gap:8px;margin-top:10px;}
+  .coord-box{
+    flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:9px 12px;
+    box-shadow:0 1px 3px rgba(43,40,32,0.04);
+  }
+  .coord-box .k{font-size:10.5px;color:var(--text-faint);font-weight:700;}
+  .coord-box .v{font-size:17px;font-weight:800;font-family:'Noto Serif KR',serif;color:var(--accent-dark);}
+  .axis-bar-wrap{margin:8px 0 4px;}
+  .axis-bar-wrap .label-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-secondary);margin-bottom:5px;font-weight:600;}
+  .axis-bar{position:relative;height:8px;background:var(--border-soft);border-radius:6px;overflow:visible;}
+  .axis-bar .fill{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px !important;height:14px;background:var(--accent);border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(190,94,63,0.5);}
+  .feedback-card{
+    background:linear-gradient(155deg,var(--accent-softer),var(--bg-card));
+    border:1px solid var(--accent-soft);border-radius:14px;padding:18px;margin-top:16px;
+    box-shadow:0 3px 12px rgba(190,94,63,0.06);
+  }
+  .feedback-card .ftitle{font-size:16.5px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .feedback-card .fsection{margin-bottom:12px;}
+  .feedback-card .fsection .flab{font-size:11.5px;font-weight:800;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+  .feedback-card .fsection p{margin:0;font-size:13.5px;line-height:1.65;color:var(--text-primary);}
+  .info-note{font-size:11.5px;color:var(--text-faint);margin-top:14px;line-height:1.6;}
+
+  /* ---------- Overview tab (tri grid) ---------- */
+  .tri-grid{
+    flex:1;min-height:0;display:grid;
+    grid-template-columns:1fr 2.3fr;grid-template-rows:1fr 1fr;gap:var(--gap);
+  }
+  .tri-grid .card{display:flex;flex-direction:column;min-height:0;}
+  .tri-grid .card:nth-child(1){grid-column:1;grid-row:1;}
+  .tri-grid .card:nth-child(2){grid-column:1;grid-row:2;}
+  .tri-grid .card:nth-child(3){grid-column:2;grid-row:1 / span 2;}
+  .tri-grid .card:nth-child(3) h3{font-size:clamp(16px,1.2vw,19px);}
+
+  /* ---------- Draft tab ---------- */
+  .draft-setup{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;font-weight:700;color:var(--text-secondary);}
+  select, .field input{
+    padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13.5px;background:var(--bg-card);
+  }
+  .captain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:14px;}
+  #phase-setup, #phase-captains{justify-content:center;}
+  #phase-drafting.active{flex:1;min-height:0;}
+  .turn-banner{
+    flex:0 0 auto;
+    background:var(--accent);color:#fff;border-radius:14px;padding:11px 20px;display:flex;align-items:center;
+    justify-content:space-between;flex-wrap:wrap;gap:10px;
+  }
+  .turn-banner .t1{font-size:11.5px;opacity:.85;font-weight:600;}
+  .turn-banner .t2{font-size:17px;font-weight:800;font-family:'Noto Serif KR',serif;}
+  .draft-grid{flex:1;min-height:0;display:grid;grid-template-columns:1.4fr 1fr;gap:var(--gap);}
+  .draft-grid .card{display:flex;flex-direction:column;min-height:0;}
+  .team-board-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:2px;}
+  .team-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .team-col{background:var(--bg-card-alt);border:1px solid var(--border);border-radius:12px;padding:10px;}
+  .team-col .cap{font-size:12.5px;font-weight:800;padding-bottom:7px;margin-bottom:7px;border-bottom:1px dashed var(--border);display:flex;align-items:center;}
+  .team-col .cap .icon{width:13px;height:13px;margin-right:5px;color:#D9A521;}
+  .team-col .member{
+    font-size:12px;padding:6px 8px;border-radius:8px;background:var(--bg-card);margin-bottom:5px;
+    cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border-soft);
+  }
+  .team-col .member .mtext{display:flex;align-items:center;}
+  .team-col .member .icon{width:12px;height:12px;margin-right:5px;color:var(--text-faint);}
+  .team-col .member:hover{border-color:var(--accent);}
+  .team-col .member.revealed{background:var(--accent-softer);}
+  .team-col.current{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .draft-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .phase-block{display:none;}
+  .phase-block.active{display:flex;flex-direction:column;gap:var(--gap);}
+  .empty-hint{font-size:12px;color:var(--text-faint);padding:6px 0 0;flex:0 0 auto;}
+
+  /* ---------- Balance strip (group tab) ---------- */
+  .group-tab-head{flex:0 0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .balance-strip{flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:2px;}
+  .balance-card{
+    flex:1;min-width:126px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    padding:9px 12px;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(43,40,32,0.04);
+  }
+  .balance-card:hover{border-color:var(--accent);box-shadow:0 3px 10px rgba(43,40,32,0.08);transform:translateY(-1px);}
+  .balance-card.active{border-color:var(--accent);background:var(--accent-softer);box-shadow:0 3px 10px rgba(190,94,63,0.12);}
+  .bc-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:800;margin-bottom:6px;}
+  .bc-top .bc-n{color:var(--text-secondary);font-weight:600;font-size:11px;}
+  .bc-bar{height:6px;background:var(--border-soft);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+  .bc-fill{height:100%;border-radius:4px;transition:width .3s ease;}
+  .bc-bottom{font-size:10.5px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;gap:4px;font-weight:600;}
+  .warn-tag{background:#F6DCC9;color:#8A4321;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap;}
+
+  /* ---------- Reshuffle tab ---------- */
+  .auto-assign-row{flex:0 0 auto;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+  .reshuffle-board{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;}
+  .reshuffle-col{
+    flex:1 0 170px;min-width:170px;display:flex;flex-direction:column;min-height:0;
+    background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:11px;transition:border-color .15s;
+  }
+  .reshuffle-col.drag-over{border-color:var(--accent);background:var(--accent-softer);}
+  .rc-head{flex:0 0 auto;}
+  .rc-title{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;font-weight:800;margin-bottom:6px;}
+  .rc-title .rc-n{font-size:11px;color:var(--text-secondary);font-weight:600;}
+  .rc-sub{font-size:10.5px;color:var(--text-secondary);margin-top:1px;}
+  .rc-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:9px;padding-right:2px;}
+  .rc-card{
+    display:flex;align-items:center;gap:7px;background:var(--bg-card-alt);border:1px solid var(--border-soft);
+    border-radius:9px;padding:8px 10px;cursor:grab;font-size:12.5px;font-weight:700;transition:all .15s;
+  }
+  .rc-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(43,40,32,0.07);}
+  .rc-card.dragging{opacity:.4;}
+  .rc-card .type-badge{padding:2px 8px;font-size:10px;flex:0 0 auto;}
+  .rc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  /* ---------- Print ---------- */
+  .panel-print{position:absolute;right:54px;top:16px;width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--border);background:var(--bg-card);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;color:var(--text-secondary);}
+  .panel-print:hover{background:var(--accent-soft);color:var(--accent-dark);border-color:var(--accent);}
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    body{height:auto !important;overflow:visible !important;background:#fff;}
+    body.print-panel .detail-panel, body.print-panel .detail-panel *{visibility:visible;}
+    body.print-panel .detail-panel{position:absolute;left:0;top:0;width:100% !important;height:auto !important;border:none;overflow:visible;}
+    body.print-panel .detail-panel-inner{opacity:1 !important;transform:none !important;width:100% !important;height:auto !important;overflow:visible;padding:20px;}
+    body.print-panel .panel-close, body.print-panel .panel-print{display:none !important;}
+    body.print-group #printArea, body.print-group #printArea *{visibility:visible;}
+    body.print-group #printArea{display:block;position:absolute;left:0;top:0;width:100%;padding:24px;color:#1a1a1a;}
+    body.print-group .p-student{page-break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:10px;}
+
+    /* 팀 로스터 PDF(익명/실명 2페이지) 디자인 */
+    .print-page{page-break-after:always;}
+    .print-page:last-child{page-break-after:auto;}
+    .pp-header{
+      display:flex;align-items:center;gap:14px;
+      background:linear-gradient(135deg,#D97757,#BE5E3F);color:#fff;
+      border-radius:14px;padding:16px 20px;margin-bottom:18px;
+    }
+    .pp-badge{
+      width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.22);
+      display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;
+      flex:0 0 auto;letter-spacing:.5px;
+    }
+    .pp-title{font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;}
+    .pp-subtitle{font-size:12px;opacity:.9;margin-top:2px;}
+    .pp-tag{margin-left:auto;background:rgba(255,255,255,0.24);padding:5px 13px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;}
+    .pp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .pp-team{border:1px solid #e6e2d6;border-top:4px solid #D97757;border-radius:10px;padding:12px 14px;page-break-inside:avoid;background:#fffdf9;}
+    .pp-team-head{font-weight:800;font-size:13.5px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;color:#2B2820;}
+    .pp-team-meta{font-size:10.5px;color:#7A7566;font-weight:600;}
+    .pp-member{display:flex;align-items:center;gap:7px;font-size:11.5px;padding:4px 0;border-bottom:1px dashed #eee;color:#2B2820;}
+    .pp-dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
+    .pp-name{flex:1;font-weight:700;}
+    .pp-type{font-size:10px;color:#8a8370;font-weight:600;}
+    .pp-empty{font-size:11px;color:#aaa;padding:4px 0;}
+    .pp-footer{margin-top:16px;text-align:center;font-size:10px;color:#a29c8b;}
+  }
+
+  /* ---------- Footer (제작자/저작권 표기) ---------- */
+  .app-footer{
+    flex:0 0 auto;
+    padding:6px clamp(18px,2vw,32px) 7px;
+    font-size:10.5px;color:var(--text-faint);
+    display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;
+    border-top:1px solid var(--border-soft);text-align:center;
+  }
+  .app-footer .sep{opacity:.5;}
+
+  /* ---------- Narrow-screen fallback: stack & allow scroll ---------- */
+  @media (max-width:1180px){
+    .tri-grid{grid-template-columns:1fr 1fr;grid-template-rows:none;grid-auto-rows:minmax(260px,auto);}
+    .tri-grid .card:nth-child(1){grid-column:1;grid-row:auto;}
+    .tri-grid .card:nth-child(2){grid-column:2;grid-row:auto;}
+    .tri-grid .card:nth-child(3){grid-column:1 / span 2;grid-row:auto;min-height:380px;}
+    .draft-grid{grid-template-columns:1fr;grid-auto-rows:minmax(280px,auto);}
+  }
+  @media (max-width:860px){
+    body{height:auto;overflow:auto;}
+    .layout-wrap{height:auto;}
+    .content-area{height:auto;overflow-y:visible;}
+    .tab-panel.active{height:auto;}
+    .tri-grid, .grid.fill, .draft-grid{display:flex;flex-direction:column;}
+    .tri-grid .card, .grid.fill .card, .draft-grid .card{min-height:280px;}
+    .reshuffle-board{flex-direction:column;overflow-x:visible;}
+    .reshuffle-col{min-height:200px;}
+    .layout-wrap.panel-open .content-area{width:100%;}
+    .layout-wrap.panel-open .detail-panel{width:100%;height:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1><span class="brand-badge"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2l-2.1 5.6-5.6 2.1 2.1-5.6 5.6-2.1z"/></svg></span>DISC 팀빌딩 대시보드</h1>
+    <p>설문 응답을 기반으로 학생들의 행동 성향(D·I·S·C)을 분석하고, 모둠 구성을 돕는 인터랙티브 리포트입니다.</p>
+  </div>
+  <div class="header-right">
+    <div class="sync-row">
+      <span class="sync-badge" id="syncBadge"><span class="dot" id="syncDot"></span><span id="syncText">샘플 데이터 사용 중</span></span>
+      <button class="btn small" id="discInfoBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.9" fill="currentColor" stroke="none"/></svg>DISC란?</button>
+      <button class="btn small" id="helpBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.5a2.8 2.8 0 0 1 5.4.9c0 1.8-2.6 2-2.6 3.8"/><circle cx="12" cy="17.2" r="0.9" fill="currentColor" stroke="none"/></svg>사용법</button>
+      <button class="btn small" id="privacyBtn"></button>
+      <button class="btn small" id="refreshBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4"/><path d="M20 12a8 8 0 0 1-14 5.3"/><path d="M6 21v-4h4"/></svg>새로고침</button>
+      <button class="btn small" id="settingsBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 7l2.6 1.5M17.2 15.5l2.6 1.5M4.2 17l2.6-1.5M17.2 8.5l2.6-1.5M3 12h3M18 12h3"/></svg>연결 설정</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="privacyBackdrop">
+  <div class="modal-card">
+    <h3>개인정보 공개</h3>
+    <p class="sub">비밀번호를 입력하면 학생 이름이 표시됩니다.</p>
+    <input type="password" id="privacyPasswordInput" placeholder="비밀번호 4자리" inputmode="numeric" />
+    <div class="privacy-error" id="privacyError" style="display:none;">비밀번호가 올바르지 않습니다.</div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn" id="privacyCancelBtn" style="flex:1;">취소</button>
+      <button class="btn primary" id="privacySubmitBtn" style="flex:1;">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="discBackdrop">
+  <div class="modal-card wide">
+    <button class="modal-x" id="discCloseX">✕</button>
+    <h3>DISC 성향이란?</h3>
+    <p class="sub">설문 20문항의 응답을 두 축으로 계산해서, 학생마다 어떤 행동 성향이 강한지 지도 위 위치로 보여주는 방식입니다.</p>
+
+    <div class="help-steps">
+      <div class="help-step">
+        <div class="hs-num">X</div>
+        <div class="hs-body">
+          <div class="hs-title">가로축(X) — 업무 지향 ↔ 사람 지향</div>
+          <p>문항 11~20번(관계·배려 관련 문항) 점수 합계에서 30을 뺀 값입니다. <b>음수(−)</b>일수록 결과·과업 중심으로 움직이고, <b>양수(+)</b>일수록 사람들과의 관계·분위기를 더 중요하게 여깁니다.</p>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="hs-num">Y</div>
+        <div class="hs-body">
+          <div class="hs-title">세로축(Y) — 신중함 ↔ 능동적</div>
+          <p>문항 1~10번(주도성·속도 관련 문항) 점수 합계에서 30을 뺀 값입니다. <b>음수(−)</b>일수록 신중하고 천천히 반응하고, <b>양수(+)</b>일수록 빠르고 적극적으로 나섭니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="disc-diagram">
+      <div class="dd-grid">
+        <div class="dd-cell" style="background:rgba(210,105,74,0.14);">
+          <div class="dd-label" style="color:#D2694A;">D · 주도형</div>
+          <div class="dd-sub">업무지향 · 능동적</div>
+        </div>
+        <div class="dd-cell" style="background:rgba(220,164,48,0.14);">
+          <div class="dd-label" style="color:#B3860F;">I · 사교형</div>
+          <div class="dd-sub">사람지향 · 능동적</div>
+        </div>
+        <div class="dd-cell" style="background:rgba(78,123,172,0.14);">
+          <div class="dd-label" style="color:#4E7BAC;">C · 신중형</div>
+          <div class="dd-sub">업무지향 · 신중</div>
+        </div>
+        <div class="dd-cell" style="background:rgba(79,154,108,0.14);">
+          <div class="dd-label" style="color:#4F9A6C;">S · 안정형</div>
+          <div class="dd-sub">사람지향 · 신중</div>
+        </div>
+      </div>
+      <div class="dd-caption">← 왼쪽 업무 지향 / 오른쪽 사람 지향 →　　↑ 위 능동적 / 아래 신중 ↓</div>
+    </div>
+
+    <div class="disc-type-grid">
+      <div class="dt-card" style="border-left-color:#D2694A">
+        <div class="dt-head">D · 주도형</div>
+        <div class="dt-desc">목표 달성 욕구와 추진력이 강하고, 결정을 빠르게 내리며 리더 역할을 즐깁니다.</div>
+      </div>
+      <div class="dt-card" style="border-left-color:#DCA430">
+        <div class="dt-head">I · 사교형</div>
+        <div class="dt-desc">긍정적인 에너지로 분위기를 이끌고, 사람들과 어울리며 인정받을 때 힘을 냅니다.</div>
+      </div>
+      <div class="dt-card" style="border-left-color:#4F9A6C">
+        <div class="dt-head">S · 안정형</div>
+        <div class="dt-desc">배려심이 깊고 조화를 중시하며, 갈등보다 관계의 안정을 우선하는 든든한 조력자입니다.</div>
+      </div>
+      <div class="dt-card" style="border-left-color:#4E7BAC">
+        <div class="dt-head">C · 신중형</div>
+        <div class="dt-desc">꼼꼼하게 사실을 확인하고 원칙과 정확성을 중요하게 여기는 분석가형입니다.</div>
+      </div>
+      <div class="dt-card" style="border-left-color:#8D76BE;grid-column:1 / -1;">
+        <div class="dt-head">균형형 (B)</div>
+        <div class="dt-desc">X, Y 값이 모두 −3~+3 사이(원점 근처)라면 어느 한쪽으로 치우치지 않은 균형형으로 분류됩니다. 상황에 맞춰 유연하게 역할을 바꿀 수 있는 유형이에요.</div>
+      </div>
+    </div>
+
+    <div class="help-steps">
+      <div class="help-step">
+        <div class="hs-num">●</div>
+        <div class="hs-body">
+          <div class="hs-title">그래프의 점은 무엇을 의미하나요?</div>
+          <p>산점도의 점 하나가 학생 한 명입니다. 점 위의 작은 숫자는 학생 고유 번호(No.)이고, 점의 위치는 그 학생의 (X, Y) 좌표입니다. <b>원점에서 멀리 떨어질수록</b> 그 방향의 성향이 뚜렷하다는 뜻이고, <b>원점에 가까울수록</b> 균형형(B)에 가깝습니다.</p>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="hs-num">?</div>
+        <div class="hs-body">
+          <div class="hs-title">예시로 읽어보기</div>
+          <p>예를 들어 어떤 학생의 좌표가 <b>(X=+14, Y=+9)</b>라면 — X가 양수(+)이니 사람 지향, Y도 양수(+)이니 능동적입니다. 두 값 모두 양수인 1사분면이므로 <b>I(사교형)</b>으로 분류되고, 값이 클수록(원점에서 멀수록) 그 성향이 더 강하다는 뜻이에요.<br><br>반대로 좌표가 <b>(X=−12, Y=+16)</b>이라면 업무 지향(X−) + 능동적(Y+)인 2사분면에 속해 <b>D(주도형)</b>으로 분류됩니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-title">💡 DISC 기반 모둠 구성 팁</div>
+      <ul class="tip-list">
+        <li><b>이질집단(다양한 유형 섞기)</b>은 아이디어가 필요한 프로젝트·창의 과제에 적합해요. 서로 다른 강점(추진력·친화력·꼼꼼함·안정감)이 자연스럽게 역할 분담으로 이어집니다.</li>
+        <li><b>동질집단(비슷한 유형끼리)</b>은 특정 역량을 집중적으로 키우는 활동에 적합하지만, 협업 시너지는 떨어질 수 있어 병행 사용을 권장해요.</li>
+        <li>한 팀에 <b>D(주도형)</b>이 2명 이상 몰리면 주도권 다툼이 생기기 쉬우니, 최소 1명은 S나 C 유형을 배치해 완충 역할을 주세요.</li>
+        <li><b>I(사교형)</b>만 모인 팀은 분위기는 좋지만 마감을 놓치기 쉬우니, 꼼꼼한 C 유형 1명을 함께 넣어주면 균형이 잡힙니다.</li>
+        <li>원점에서 멀리 떨어진(성향이 매우 강한) 학생은 조장 역할과 잘 맞지만, 반대 성향의 친구와 짝을 지어주면 서로를 보완할 수 있어요.</li>
+        <li><b>균형형(B)</b> 학생은 여러 성향을 오가며 조율할 수 있어, 갈등이 잦은 팀의 중재자 역할로 배치하면 효과적입니다.</li>
+        <li>매 학기 이질/동질 구성을 번갈아 사용해보면, 학생들이 서로 다른 협업 경험을 쌓을 수 있어요. (이 두 방식은 "모둠 재구성" 탭에서 자동 배치로 바로 실험해볼 수 있습니다)</li>
+      </ul>
+    </div>
+
+    <button class="btn primary" id="discCloseBtn" style="width:100%;margin-top:6px;">확인했어요</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="helpBackdrop">
+  <div class="modal-card wide">
+    <button class="modal-x" id="helpCloseX">✕</button>
+    <h3>사용 방법</h3>
+    <p class="sub">아래 순서대로 진행하면 대시보드에서 학급 데이터를 확인할 수 있습니다. (자동 갱신은 없고, 새로고침 버튼으로 최신화합니다)</p>
+    <div class="help-steps">
+      <div class="help-step">
+        <div class="hs-num">1</div>
+        <div class="hs-body">
+          <div class="hs-title">학생 설문 진행하기</div>
+          <p>버튼을 눌러 설문지를 내 구글 드라이브로 복사한 뒤, 학생들에게 링크를 공유해 응답을 받으세요.</p>
+          <a class="btn small" href="https://docs.google.com/forms/d/1IctWy9mt0d9DeYCZqrSsgMumwMq0mtQKnuQvjSPcwB0/copy" target="_blank" rel="noopener">설문지 사본 만들기 ↗</a>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="hs-num">2</div>
+        <div class="hs-body">
+          <div class="hs-title">응답 시트 공유 설정 바꾸기</div>
+          <p>설문 응답이 쌓이는 구글 시트를 열고, 우측 상단 <b>공유</b> → 일반 액세스를 <b>"링크가 있는 모든 사용자" · 뷰어</b>로 바꿔주세요. 이 설정이 안 되어 있으면 대시보드가 데이터를 불러오지 못합니다.</p>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="hs-num">3</div>
+        <div class="hs-body">
+          <div class="hs-title">시트 링크를 대시보드에 연결하기</div>
+          <p>시트 주소창의 URL을 그대로 복사해서, 우측 상단 <b>⚙ 연결 설정</b>을 열고 붙여넣은 뒤 "연결하기"를 누르세요. 이후 학생 응답이 추가되면 헤더의 <b>↻ 새로고침</b> 버튼을 눌러 최신 데이터로 업데이트하면 됩니다 (자동 갱신은 되지 않아요).</p>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="hs-num">4</div>
+        <div class="hs-body">
+          <div class="hs-title">탭 둘러보기</div>
+          <p>
+            <b>전체 분석</b> — 반 전체 성향 분포와 사분면 산점도<br>
+            <b>모둠별 분석</b> — 모둠을 골라 밸런스 점수와 성향 비율 확인<br>
+            <b>개별 분석</b> — 학생 검색 후 맞춤 지도 방안 확인<br>
+            <b>팀 빌딩</b> — 조장들이 돌아가며 블라인드 드래프트로 새 팀 구성<br>
+            <b>모둠 재구성</b> — 드래그로 직접, 또는 이질/동질집단으로 자동 배치
+          </p>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="hs-num">🔒</div>
+        <div class="hs-body">
+          <div class="hs-title">개인정보 보호</div>
+          <p>기본적으로 학생 이름은 "학생 N"으로 가려져 있습니다. 헤더의 <b>개인정보 공개</b> 버튼에서 비밀번호를 입력해야 실제 이름이 보입니다.</p>
+        </div>
+      </div>
+    </div>
+    <button class="btn primary" id="helpCloseBtn" style="width:100%;margin-top:16px;">확인했어요</button>
+  </div>
+</div>
+
+<div class="settings-pop" id="settingsPop">
+  <label>0단계 · 설문 준비</label>
+  <a class="btn small" style="width:100%;margin:6px 0 12px;justify-content:center;" href="https://docs.google.com/forms/d/1IctWy9mt0d9DeYCZqrSsgMumwMq0mtQKnuQvjSPcwB0/copy" target="_blank" rel="noopener">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h6l4 4v14H8z"/><path d="M14 3v4h4"/><path d="M10 12h6M10 15.5h6M10 8.5h2"/></svg>
+    설문지 사본 만들기 ↗
+  </a>
+  <label>구글 시트 링크</label>
+  <input type="text" id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/xxxx/edit#gid=0" />
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary small" id="sheetConnectBtn" style="flex:1;">연결하기</button>
+    <button class="btn small" id="sheetDisconnectBtn">샘플로 전환</button>
+  </div>
+  <div class="hint">설문 응답이 쌓이는 구글 시트의 링크(주소창 URL 그대로)를 붙여넣으세요. 시트 공유 설정이 "링크가 있는 모든 사용자 · 뷰어"로 되어 있어야 합니다. 연결 후에는 자동으로 갱신되지 않으니, 새 응답이 들어오면 헤더의 <b>↻ 새로고침</b> 버튼을 눌러 직접 최신화해주세요. 링크는 이 브라우저에 저장됩니다. 처음이시면 우측 상단 <b>? 사용법</b>을 먼저 확인해보세요.</div>
+
+  <label style="display:block;margin-top:14px;">백업 · 복원</label>
+  <div style="display:flex;gap:8px;margin:6px 0 4px;">
+    <button class="btn small" id="exportJsonBtn" style="flex:1;justify-content:center;"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>JSON으로 저장</button>
+    <button class="btn small" id="importJsonBtn" style="flex:1;justify-content:center;"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M4 19h16"/></svg>JSON 불러오기</button>
+    <input type="file" id="importJsonInput" accept="application/json,.json" style="display:none;" />
+  </div>
+  <div class="hint">현재 학생 데이터, 팀 빌딩(드래프트) 진행 상황, 모둠 재구성 결과를 파일 하나로 저장합니다. 다른 컴퓨터에서 이어서 작업하거나 백업해둘 때 사용하세요.</div>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="overview"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>전체 분석</button>
+  <button class="tab-btn" data-tab="group"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.7 14.3c2.5.5 4.3 2.8 4.3 5.7"/></svg>모둠별 분석</button>
+  <button class="tab-btn" data-tab="individual"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>개별 분석</button>
+  <button class="tab-btn" data-tab="draft"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h4l9 12h5"/><path d="M17 4l4 2-4 2"/><path d="M3 18h4l3-4"/><path d="M17 20l4-2-4-2"/></svg>팀 빌딩</button>
+  <button class="tab-btn" data-tab="reshuffle"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><path d="M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg>모둠 재구성</button>
+</div>
+
+<div class="layout-wrap" id="layoutWrap">
+  <div class="content-area" id="contentArea">
+
+    <!-- TAB 1: 전체 분석 -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stat-row" id="overviewStats"></div>
+      <div class="tri-grid">
+        <div class="card">
+          <h3>반 전체 성향 분포</h3>
+          <p class="sub">DISC 유형 비율</p>
+          <div class="chart-box"><canvas id="overviewDonut"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>모둠별 성향 구성</h3>
+          <p class="sub">모둠별 유형 인원수</p>
+          <div class="chart-box"><canvas id="overviewBar"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>전체 사분면 산점도</h3>
+          <p class="sub">점 위 숫자는 학생 번호(No.)입니다 · 클릭하면 상세 지도 방안을 확인할 수 있어요</p>
+          <div class="chart-box"><canvas id="overviewScatter"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: 모둠별 분석 -->
+    <div class="tab-panel" id="tab-group">
+      <div class="balance-strip" id="balanceStrip"></div>
+      <div class="group-tab-head">
+        <div class="filter-row" id="groupFilterRow"></div>
+        <button class="btn small" id="groupPrintBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v4h12v-4"/></svg>리포트 인쇄</button>
+      </div>
+      <div class="stat-row" id="groupStats"></div>
+      <div class="grid grid-2 fill">
+        <div class="card">
+          <h3 id="groupScatterTitle">모둠 산점도</h3>
+          <p class="sub">점 위 숫자는 학생 번호(No.)입니다 · 클릭 시 상세 피드백 패널이 열립니다</p>
+          <div class="chart-box"><canvas id="groupScatter"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>성향 비율</h3>
+          <p class="sub" id="groupDonutSub">선택한 모둠의 유형 분포</p>
+          <div class="chart-box"><canvas id="groupDonut"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: 개별 분석 -->
+    <div class="tab-panel" id="tab-individual">
+      <div class="grid grid-2 fill">
+        <div class="card">
+          <h3>전체 사분면 지도</h3>
+          <p class="sub">점 위 숫자는 학생 번호(No.)입니다 · 학생을 선택하면 하이라이트되고 상세 패널이 열립니다</p>
+          <div class="chart-box"><canvas id="individualScatter"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="search-box">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg>
+            <input type="text" id="studentSearch" placeholder="이름 또는 모둠으로 검색" />
+          </div>
+          <div class="list-scroll"><div class="student-grid" id="studentGrid"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: 팀 빌딩 -->
+    <div class="tab-panel" id="tab-draft">
+
+      <div class="card phase-block active" id="phase-setup">
+        <h3>1단계 · 모둠 수 정하기</h3>
+        <p class="sub">몇 개의 팀으로 새로 나눌지 정해주세요</p>
+        <div class="draft-setup">
+          <div class="field">
+            <label>팀 개수</label>
+            <select id="teamCountSelect">
+              <option value="2">2팀</option>
+              <option value="3">3팀</option>
+              <option value="4" selected>4팀</option>
+              <option value="5">5팀</option>
+              <option value="6">6팀</option>
+              <option value="7">7팀</option>
+              <option value="8">8팀</option>
+            </select>
+          </div>
+          <button class="btn primary" id="goCaptainBtn">다음: 조장 선택하기 →</button>
+        </div>
+      </div>
+
+      <div class="card phase-block" id="phase-captains">
+        <h3>2단계 · 팀별 조장 선택</h3>
+        <p class="sub">각 팀의 조장이 될 학생을 지정해주세요 (조장은 처음부터 신원이 공개됩니다)</p>
+        <div class="captain-grid" id="captainGrid"></div>
+        <div class="draft-actions">
+          <button class="btn" id="backSetupBtn">← 이전</button>
+          <button class="btn primary" id="startDraftBtn">드래프트 시작하기 →</button>
+        </div>
+      </div>
+
+      <div class="phase-block" id="phase-drafting">
+        <div class="turn-banner" id="turnBanner">
+          <div>
+            <div class="t1">현재 차례</div>
+            <div class="t2" id="turnText">-</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="t1" id="draftProgress">-</div>
+          </div>
+        </div>
+        <div class="draft-grid">
+          <div class="card">
+            <h3>블라인드 드래프트 산점도</h3>
+            <p class="sub">이름은 가려져 있어요(번호만 표시). 성향 위치를 보고 원하는 팀원을 영입하세요 (점 클릭 = 영입)</p>
+            <div class="chart-box"><canvas id="draftScatter"></canvas></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;flex:0 0 auto;">
+              <h3 style="margin:0;">팀 구성 현황</h3>
+              <div class="draft-actions">
+                <button class="btn small" id="revealAllBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>전체 공개</button>
+                <button class="btn small" id="draftPrintBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v4h12v-4"/></svg>PDF로 저장</button>
+                <button class="btn small" id="resetDraftBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v5h5"/></svg>새로 시작</button>
+              </div>
+            </div>
+            <div class="team-board-scroll"><div class="team-board" id="teamBoard"></div></div>
+            <p class="empty-hint">공개되지 않은 팀원은 클릭하면 그 학생만 개별 공개됩니다.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 5: 모둠 재구성 -->
+    <div class="tab-panel" id="tab-reshuffle">
+      <div class="group-tab-head">
+        <p class="sub" style="margin:0;max-width:640px;">기존 모둠원을 드래그해서 다른 모둠 칸으로 옮기거나, 성향에 따라 자동으로 배치해보세요. 밸런스 점수가 즉시 갱신됩니다. (시트에는 반영되지 않는 시뮬레이션입니다)</p>
+      </div>
+      <div class="auto-assign-row">
+        <div class="field">
+          <label>자동 배치 팀 수</label>
+          <select id="autoTeamCountSelect">
+            <option value="2">2팀</option>
+            <option value="3">3팀</option>
+            <option value="4">4팀</option>
+            <option value="5" selected>5팀</option>
+            <option value="6">6팀</option>
+            <option value="7">7팀</option>
+            <option value="8">8팀</option>
+          </select>
+        </div>
+        <button class="btn" id="autoHeteroBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h4l9 12h5"/><path d="M17 4l4 2-4 2"/><path d="M3 18h4l3-4"/><path d="M17 20l4-2-4-2"/></svg>이질집단으로 자동 배치</button>
+        <button class="btn" id="autoHomoBtn"><svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="7" r="2.6"/><circle cx="7" cy="16" r="2.6"/><circle cx="17" cy="16" r="2.6"/></svg>동질집단으로 자동 배치</button>
+        <button class="btn" id="importDraftBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>팀 빌딩 결과 불러오기</button>
+        <button class="btn small" id="reshufflePrintBtn" style="margin-left:auto;"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v4h12v-4"/></svg>PDF로 저장</button>
+        <button class="btn small" id="reshuffleResetBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v5h5"/></svg>원래 모둠으로 초기화</button>
+      </div>
+      <p class="empty-hint" style="margin-top:-4px;">이질집단: 팀마다 다양한 성향이 골고루 섞이도록 배치 (밸런스 점수 ↑) · 동질집단: 비슷한 성향끼리 모이도록 배치 (밸런스 점수 ↓)</p>
+      <div class="reshuffle-board" id="reshuffleBoard"></div>
+    </div>
+
+  </div>
+
+  <aside class="detail-panel" id="detailPanel">
+    <div class="detail-panel-inner" id="detailPanelInner"></div>
+  </aside>
+</div>
+
+<footer class="app-footer">
+  <span>© 2026 김재현 (월촌중학교). All rights reserved.</span>
+  <span class="sep">·</span>
+  <span>본 대시보드는 교육 목적의 자체 제작 도구이며, 무단 복제 및 배포를 금합니다.</span>
+</footer>
+
+<div id="printArea"></div>
+
+<script>
+/* =========================================================
+   1. 설정 / 상수
+========================================================= */
+const STORAGE_SHEET_KEY = 'disc_dashboard_sheet_url';
+const STORAGE_DRAFT_KEY = 'disc_dashboard_draft_state_v1';
+const STORAGE_RESHUFFLE_KEY = 'disc_dashboard_reshuffle_state_v1';
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1KDNqsCXwNxhhMcKGKzaw7C-hdylRo5vqiG28_TkJepU/edit?resourcekey=&gid=354084649#gid=354084649';
+
+const DISC_META = {
+  D: { label:'주도형', color:'#D2694A' },
+  I: { label:'사교형', color:'#DCA430' },
+  S: { label:'안정형', color:'#4F9A6C' },
+  C: { label:'신중형', color:'#4E7BAC' },
+  B: { label:'밸런스형', color:'#8D76BE' }
+};
+
+function typeSwatch(t){
+  return `<span class="type-ic" style="background:${DISC_META[t].color}"></span>`;
+}
+
+const ICON_CROWN = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z"/></svg>';
+const ICON_EYE_OFF = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>';
+const ICON_LOCK = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const ICON_UNLOCK = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2.3"/></svg>';
+const PRIVACY_PASSWORD = '4321';
+
+/* 원본 응답 데이터 (이름, 모둠, 문항1~20 점수) - 배포 URL 연결 전까지 사용되는 샘플/기본 데이터 */
+const EMBEDDED_ROWS = [
+["이지민","4모둠",[5,5,5,5,5,5,5,5,5,5,5,2,2,3,2,1,1,1,2,5]],
+["박지윤","3모둠",[1,1,2,1,3,5,4,1,2,4,5,5,5,2,5,4,5,5,4,5]],
+["김효섭","4모둠",[4,4,4,3,4,5,2,3,2,2,4,2,3,4,3,4,2,2,2,5]],
+["민재홍","3모둠",[3,3,3,4,3,3,4,5,4,3,3,3,4,2,3,1,3,3,4,5]],
+["이서현","3모둠",[2,2,2,3,4,3,3,2,3,4,3,4,4,4,4,4,3,3,4,4]],
+["김민주","4모둠",[4,2,4,3,4,4,3,3,2,2,4,4,4,4,3,2,2,3,4,5]],
+["변수민","2모둠",[3,2,1,4,2,4,3,1,1,2,2,4,2,3,2,2,2,3,2,2]],
+["최우진","3모둠",[5,3,2,5,5,5,5,4,3,3,1,3,2,5,5,4,5,5,4,5]],
+["김온유","1모둠",[4,5,3,3,5,5,5,3,5,1,5,5,3,4,5,1,5,3,5,5]],
+["김연재","4모둠",[5,2,3,5,1,5,2,5,3,5,2,4,4,5,5,5,5,4,2,5]],
+["이서준","5모둠",[5,4,3,5,4,5,5,4,3,4,2,2,1,1,1,1,2,1,2,5]],
+["정세윤B","1모둠",[2,2,1,2,2,4,1,2,2,3,3,2,1,1,3,3,2,1,1,1]],
+["원지우","5모둠",[4,1,1,2,1,1,3,1,3,2,1,2,2,4,2,1,4,1,3,4]],
+["최아윤","2모둠",[1,3,1,1,5,3,1,1,1,1,5,4,3,4,1,1,1,1,4,5]],
+["이연수","2모둠",[3,4,4,4,4,4,3,4,2,2,2,4,5,5,5,5,5,2,4,3]],
+["임유찬","3모둠",[3,4,4,3,5,4,2,2,4,3,4,4,5,4,1,1,3,4,4,4]],
+["주윤겸","3모둠",[3,3,2,2,5,3,3,3,3,3,1,2,2,1,2,2,1,3,1,4]],
+["윤소민","5모둠",[3,3,3,4,3,5,2,4,4,3,3,3,3,3,3,4,2,2,2,3]],
+["조항겸","1모둠",[4,4,3,4,4,4,5,3,4,4,4,4,4,3,4,4,3,2,3,5]],
+["유지호","1모둠",[4,5,4,1,1,5,3,5,5,5,1,1,1,3,1,1,1,1,4,5]],
+["윤세준","2모둠",[3,3,4,2,4,5,2,4,4,3,5,5,3,5,5,2,3,4,4,4]],
+["박서림","5모둠",[2,2,4,4,2,4,3,2,2,4,3,2,2,2,3,2,3,3,1,4]],
+["정여진","4모둠",[2,3,2,3,4,4,3,2,2,2,4,4,5,5,4,4,4,5,4,5]],
+["구민찬","5모둠",[1,1,1,1,1,1,3,3,4,3,1,1,1,1,1,1,1,1,1,3]],
+["이하린","2모둠",[4,3,3,5,2,5,4,4,4,5,4,4,3,4,2,3,4,5,3,4]],
+["임세은","5모둠",[2,2,2,4,4,2,3,2,2,3,4,5,3,5,4,2,5,4,4,4]],
+["이우영","2모둠",[4,3,2,4,4,5,5,4,3,3,4,4,3,3,3,4,3,3,3,5]],
+["허윤","1모둠",[2,4,1,5,3,5,3,4,2,2,4,3,3,2,3,5,3,3,3,3]],
+["박건우","1모둠",[2,4,1,3,3,3,3,2,4,2,4,1,2,2,1,1,1,4,2,5]],
+["정세윤A","4모둠",[2,3,4,3,4,4,2,4,2,3,2,2,4,2,3,2,3,3,3,4]]
+];
+
+/* =========================================================
+   2. 상태
+========================================================= */
+const STATE = {
+  students: [],
+  groups: [],
+  usingLive: false,
+  lastUpdated: null,
+  activeTab: 'overview',
+  activeGroup: 'all',
+  selectedStudentId: null,
+  privacyUnlocked: false // 기본값: 이름 익명화. 새로고침 시 항상 다시 잠김.
+};
+
+function displayName(student){
+  return STATE.privacyUnlocked ? student.name : ('학생 ' + student.id);
+}
+
+const CHARTS = {}; // canvasId -> Chart instance
+
+let draft = null; // draft state object, see resetDraftState()
+let reshuffle = null; // reshuffle state object, see resetReshuffleState()
+
+/* =========================================================
+   3. 계산 로직
+========================================================= */
+function computeStudents(rows){
+  return rows.map((row, idx) => {
+    const [name, group, scores] = row;
+    const sumActive = scores.slice(0,10).reduce((a,b)=>a+Number(b||0),0);
+    const sumPeople = scores.slice(10,20).reduce((a,b)=>a+Number(b||0),0);
+    return {
+      id: idx+1,
+      name, group, scores,
+      x: sumPeople - 30,
+      y: sumActive - 30
+    };
+  });
+}
+
+function classify(x,y){
+  if(Math.abs(x)<=3 && Math.abs(y)<=3) return 'B';
+  if(x>=0 && y>=0) return 'I';
+  if(x<0 && y>=0) return 'D';
+  if(x<0 && y<0) return 'C';
+  return 'S';
+}
+
+function intensityLabel(v){
+  const a = Math.abs(v);
+  if(a<=3) return '균형 잡힌';
+  if(a<=8) return '약간';
+  if(a<=14) return '뚜렷한';
+  return '매우 강한';
+}
+
+function hexA(hex, alpha){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function buildFeedback(student){
+  const {x,y} = student;
+  const ax = Math.abs(x), ay = Math.abs(y);
+  const level = intensityLabel(Math.max(ax,ay));
+
+  if(ax<=3 && ay<=3){
+    return {
+      type:'B',
+      title:typeSwatch('B')+'밸런스 마스터',
+      strength:'특정 성향에 치우치지 않고, 상황에 맞춰 어떤 역할이든 유연하게 소화할 수 있는 균형 감각을 가졌습니다.',
+      guide:'모둠 내 갈등을 중재하거나 여러 성향의 친구들을 연결하는 핵심 허브 역할을 맡기면 좋습니다. 다양한 역할을 두루 경험하게 해주세요.',
+      caution:'자기 색깔을 강하게 드러내지 않는 경우가 많으니, 가끔 먼저 의견을 물어봐 주는 것이 도움이 됩니다.'
+    };
+  }
+
+  const type = classify(x,y);
+
+  if(type === 'D'){
+    return {
+      type:'D',
+      title:typeSwatch('D')+'주도형 (D)',
+      strength:`강력한 추진력과 리더십을 갖췄습니다. (능동성 지수 +${y}, 과업 지향 지수 ${Math.abs(x)}) — ${level} 주도 성향을 보입니다.`,
+      guide:'성취욕구가 강하므로 도전적인 과제나 리더 역할을 맡기면 능력을 발휘합니다. 결정을 빠르게 내리는 힘을 살려 프로젝트의 방향을 잡는 역할이 잘 맞습니다.',
+      caution: level==='매우 강한'
+        ? '성향이 매우 뚜렷하므로, 다른 조원의 속도를 기다려주는 소통 배려 교육이 특히 필요합니다. 의견을 밀어붙이기 전에 조원의 생각을 한 번 더 묻는 습관을 길러주세요.'
+        : '가끔 조원의 속도를 기다려주는 배려가 필요합니다. 결정 전에 조원의 동의를 구하는 짧은 확인 절차를 권해주세요.'
+    };
+  }
+  if(type === 'I'){
+    return {
+      type:'I',
+      title:typeSwatch('I')+'사교형 (I)',
+      strength:`긍정적인 에너지로 분위기를 이끄는 힘이 있습니다. (능동성 지수 +${y}, 사람 지향 지수 +${x}) — ${level} 사교 성향을 보입니다.`,
+      guide:'칭찬과 인정을 받을 때 최고의 능력을 발휘합니다. 발표나 분위기 조율, 아이스브레이킹 같은 역할을 맡기면 좋습니다.',
+      caution: level==='매우 강한'
+        ? '흥이 오르면 다소 산만해지거나 마감을 놓칠 수 있으니, 과제의 데드라인을 구체적인 숫자로 여러 번 상기시켜 주세요.'
+        : '가끔 집중이 흐트러질 수 있으니 중간 체크포인트를 정해주면 도움이 됩니다.'
+    };
+  }
+  if(type === 'S'){
+    return {
+      type:'S',
+      title:typeSwatch('S')+'안정형 (S)',
+      strength:`배려심 깊은 중재자이자 든든한 서포터입니다. (신중함 지수 ${Math.abs(y)}, 사람 지향 지수 +${x}) — ${level} 안정 성향을 보입니다.`,
+      guide:'조용히 조원을 챙기는 역할에서 강점을 보입니다. 팀의 분위기 메이커보다는 실질적인 조율자·서포터 역할을 부여해 주세요.',
+      caution: level==='매우 강한'
+        ? '변화나 갈등 상황에 스트레스를 많이 받는 편입니다. 전체 앞에서 발언을 강요하기보다 1:1로 의견을 물어 자기주장을 안전하게 펼칠 기회를 주세요.'
+        : '갈등 상황에서 자기 의견을 참을 수 있으니, 편하게 말할 수 있는 분위기를 만들어 주세요.'
+    };
+  }
+  // C
+  return {
+    type:'C',
+    title:typeSwatch('C')+'신중형 (C)',
+    strength:`논리적이고 정확한 분석가 기질을 가졌습니다. (신중함 지수 ${Math.abs(y)}, 과업 지향 지수 ${Math.abs(x)}) — ${level} 신중 성향을 보입니다.`,
+    guide:'꼼꼼하게 사실을 확인하고 자료를 점검하는 능력을 칭찬해 주세요. 데이터 정리, 자료 검수, 품질 체크 역할에 배치하면 좋습니다.',
+    caution: level==='매우 강한'
+      ? '너무 완벽을 기하려다 시작이 늦어질 수 있습니다. "70%만 완성해도 괜찮다"는 식으로 유연성을 격려해 주세요.'
+      : '완벽을 추구하는 경향이 있으니 마감 전 중간 점검으로 속도를 챙겨주세요.'
+  };
+}
+
+/* =========================================================
+   4. 데이터 로딩 (샘플 → 시트 fetch, 수동 새로고침 방식)
+========================================================= */
+function loadEmbedded(){
+  STATE.students = computeStudents(EMBEDDED_ROWS);
+  STATE.groups = [...new Set(STATE.students.map(s=>s.group))].sort((a,b)=>a.localeCompare(b,'ko'));
+  STATE.usingLive = false;
+  STATE.lastUpdated = new Date();
+  updateSyncBadge();
+}
+
+function parseSheetUrl(url){
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(!idMatch) return null;
+  const gidMatch = url.match(/[?&#]gid=(\d+)/);
+  return { id: idMatch[1], gid: gidMatch ? gidMatch[1] : null };
+}
+
+let gvizCallbackCounter = 0;
+function loadSheetViaJsonp(id, gid){
+  return new Promise((resolve, reject) => {
+    const cbName = '__discSheetCb' + (gvizCallbackCounter++);
+    let done = false;
+
+    const timeoutId = setTimeout(()=>{
+      if(done) return;
+      done = true;
+      cleanup();
+      reject(new Error('시트 응답 시간이 초과되었습니다. 링크와 공유 권한을 확인해주세요.'));
+    }, 10000);
+
+    function cleanup(){
+      clearTimeout(timeoutId);
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if(s) s.remove();
+    }
+
+    window[cbName] = function(json){
+      if(done) return;
+      done = true;
+      cleanup();
+      if(!json || !json.table){ reject(new Error('시트 데이터를 해석할 수 없습니다.')); return; }
+      resolve(json);
+    };
+
+    const script = document.createElement('script');
+    script.id = cbName;
+    let src = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:${cbName}`;
+    if(gid) src += `&gid=${gid}`;
+    src += `&_ts=${Date.now()}`; // 캐시 방지: 새로고침해도 항상 새 URL로 요청해 최신 시트 내용을 가져온다
+    script.src = src;
+    script.onerror = ()=>{
+      if(done) return;
+      done = true;
+      cleanup();
+      reject(new Error('시트를 불러올 수 없습니다. 링크가 올바른지, 공유 설정이 "링크가 있는 모든 사용자"인지 확인해주세요.'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function parseGvizToStudents(json){
+  const rows = json.table.rows || [];
+  const list = [];
+  rows.forEach((row, idx) => {
+    const c = row.c || [];
+    const name = (c[1] && c[1].v != null) ? String(c[1].v).trim() : '';
+    const group = (c[2] && c[2].v != null) ? String(c[2].v).trim() : '';
+    if(!name || !group) return;
+    const scores = [];
+    for(let q=0; q<20; q++){
+      const cell = c[3+q];
+      const v = Number(cell ? cell.v : 0);
+      scores.push(isNaN(v) ? 0 : v);
+    }
+    const sumActive = scores.slice(0,10).reduce((a,b)=>a+b,0);
+    const sumPeople = scores.slice(10,20).reduce((a,b)=>a+b,0);
+    list.push({ id: idx+1, name, group, scores, x: sumPeople-30, y: sumActive-30 });
+  });
+  return list;
+}
+
+async function fetchSheetData(url, silent){
+  try{
+    if(!silent){ setSyncStatus('연결 중…', false); }
+    const parsed = parseSheetUrl(url);
+    if(!parsed) throw new Error('올바른 구글 시트 링크가 아닙니다.');
+    const json = await loadSheetViaJsonp(parsed.id, parsed.gid);
+    const students = parseGvizToStudents(json);
+    if(!students.length) throw new Error('시트에서 학생 데이터를 찾지 못했습니다. (이름/모둠/문항 20개 순서를 확인해주세요)');
+
+    STATE.students = students;
+    STATE.groups = [...new Set(students.map(s=>s.group))].sort((a,b)=>a.localeCompare(b,'ko'));
+    STATE.usingLive = true;
+    STATE.lastUpdated = new Date();
+    updateSyncBadge();
+    renderAll();
+  }catch(err){
+    console.error(err);
+    if(!silent) alert('시트 연동에 실패했습니다: ' + err.message);
+    setSyncStatus('연동 실패 · 샘플 데이터 표시 중', false);
+  }
+}
+
+function setSyncStatus(text, live){
+  document.getElementById('syncText').textContent = text;
+  document.getElementById('syncDot').classList.toggle('live', !!live);
+}
+
+function updateSyncBadge(){
+  if(STATE.usingLive){
+    const t = STATE.lastUpdated.toLocaleTimeString('ko-KR');
+    setSyncStatus('시트 연동됨 · ' + t + ' 기준 (새로고침으로 최신화)', true);
+  }else{
+    setSyncStatus('샘플 데이터 사용 중', false);
+  }
+}
+
+/* =========================================================
+   5. 공통 유틸 / 차트 플러그인
+========================================================= */
+function quadrantPlugin(){
+  return {
+    id:'quadrantBg',
+    beforeDraw(chart){
+      const {ctx, chartArea, scales} = chart;
+      if(!chartArea || !scales.x || !scales.y) return;
+      const {left,top,right,bottom} = chartArea;
+      const zx = scales.x.getPixelForValue(0);
+      const zy = scales.y.getPixelForValue(0);
+      ctx.save();
+      ctx.fillStyle = hexA(DISC_META.I.color,0.11); ctx.fillRect(zx, top, right-zx, zy-top);
+      ctx.fillStyle = hexA(DISC_META.D.color,0.11); ctx.fillRect(left, top, zx-left, zy-top);
+      ctx.fillStyle = hexA(DISC_META.C.color,0.11); ctx.fillRect(left, zy, zx-left, bottom-zy);
+      ctx.fillStyle = hexA(DISC_META.S.color,0.11); ctx.fillRect(zx, zy, right-zx, bottom-zy);
+      ctx.strokeStyle = 'rgba(43,40,32,0.32)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(zx, top); ctx.lineTo(zx, bottom); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(left, zy); ctx.lineTo(right, zy); ctx.stroke();
+
+      const labels = [
+        { text:'I · 사교형', x: right-8, y: top+8, align:'right', valign:'top', color: DISC_META.I.color },
+        { text:'D · 주도형', x: left+8, y: top+8, align:'left', valign:'top', color: DISC_META.D.color },
+        { text:'C · 신중형', x: left+8, y: bottom-8, align:'left', valign:'bottom', color: DISC_META.C.color },
+        { text:'S · 안정형', x: right-8, y: bottom-8, align:'right', valign:'bottom', color: DISC_META.S.color }
+      ];
+      ctx.font = '800 12px "Noto Sans KR"';
+      const padX = 6, boxH = 18;
+      labels.forEach(l=>{
+        ctx.textAlign = l.align;
+        ctx.textBaseline = l.valign;
+        const w = ctx.measureText(l.text).width;
+        const boxX = l.align==='right' ? l.x - w - padX : l.x - padX;
+        const boxY = l.valign==='top' ? l.y - 3 : l.y - boxH + 3;
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillRect(boxX, boxY, w + padX*2, boxH);
+        ctx.fillStyle = l.color;
+        ctx.fillText(l.text, l.x, l.y);
+      });
+      ctx.restore();
+    }
+  };
+}
+
+function destroyChart(id){
+  if(CHARTS[id]){ CHARTS[id].destroy(); delete CHARTS[id]; }
+}
+
+/* 산점도의 각 점에 번호(학번) 배지를 그린다. 같은 좌표에 점이 겹치면
+   작은 원형으로 펼쳐서 각 번호를 따로 식별할 수 있게 한다. */
+function pointNumberPlugin(){
+  return {
+    id:'pointNumbers',
+    afterDatasetsDraw(chart){
+      const {ctx, scales} = chart;
+      if(!scales.x || !scales.y) return;
+
+      const items = [];
+      chart.data.datasets.forEach((ds, dsIndex) => {
+        if(!chart.isDatasetVisible(dsIndex)) return;
+        ds.data.forEach(pt => {
+          items.push({
+            id: pt.id,
+            px: scales.x.getPixelForValue(pt.x),
+            py: scales.y.getPixelForValue(pt.y),
+            color: ds.borderColor || '#8A8370'
+          });
+        });
+      });
+      if(!items.length) return;
+
+      const TOL = 4;
+      const used = new Array(items.length).fill(false);
+      const groups = [];
+      for(let i=0;i<items.length;i++){
+        if(used[i]) continue;
+        const group = [items[i]];
+        used[i] = true;
+        for(let j=i+1;j<items.length;j++){
+          if(used[j]) continue;
+          if(Math.abs(items[j].px-items[i].px)<=TOL && Math.abs(items[j].py-items[i].py)<=TOL){
+            group.push(items[j]);
+            used[j] = true;
+          }
+        }
+        groups.push(group);
+      }
+
+      ctx.save();
+      ctx.font = '800 9.5px "Noto Sans KR"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      function drawBadge(x, y, id, color){
+        const text = String(id);
+        const w = ctx.measureText(text).width;
+        const r = Math.max(8, w/2 + 3.5);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.lineWidth = 1.6;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        ctx.fillStyle = '#2B2820';
+        ctx.fillText(text, x, y + 0.5);
+      }
+
+      groups.forEach(group => {
+        const cx = group[0].px, cy = group[0].py;
+        const n = group.length;
+        if(n === 1){
+          drawBadge(cx, cy, group[0].id, group[0].color);
+          return;
+        }
+        const ringR = Math.min(26, 13 + n*1.6);
+        ctx.strokeStyle = 'rgba(43,40,32,0.25)';
+        ctx.lineWidth = 1;
+        group.forEach((item, idx) => {
+          const angle = (Math.PI*2*idx/n) - Math.PI/2;
+          const bx = cx + Math.cos(angle)*ringR;
+          const by = cy + Math.sin(angle)*ringR;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(bx, by);
+          ctx.stroke();
+        });
+        group.forEach((item, idx) => {
+          const angle = (Math.PI*2*idx/n) - Math.PI/2;
+          const bx = cx + Math.cos(angle)*ringR;
+          const by = cy + Math.sin(angle)*ringR;
+          drawBadge(bx, by, item.id, item.color);
+        });
+      });
+      ctx.restore();
+    }
+  };
+}
+
+function makeScatterDatasets(students, opts){
+  opts = opts || {};
+  const byType = { D:[], I:[], S:[], C:[], B:[] };
+  students.forEach(s=>{
+    const t = classify(s.x, s.y);
+    byType[t].push(opts.anon
+      ? { x:s.x, y:s.y, id:s.id, type:t }
+      : { x:s.x, y:s.y, id:s.id, name:s.name, group:s.group, type:t }
+    );
+  });
+  return Object.keys(byType).filter(t=>byType[t].length).map(t=>({
+    label: DISC_META[t].label,
+    data: byType[t],
+    backgroundColor: hexA(DISC_META[t].color, 0.88),
+    borderColor: DISC_META[t].color,
+    borderWidth:1.5,
+    pointRadius:7,
+    pointHoverRadius:10
+  }));
+}
+
+function scatterBaseOptions(onClickPoint, anon){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    scales:{
+      x:{ min:-24, max:24, title:{display:true,text:'← 업무 지향        사람 지향 →', color:'#5C5748', font:{size:11,weight:'700'}}, grid:{color:'rgba(43,40,32,0.06)'}, ticks:{color:'#7A7566', font:{size:10.5}} },
+      y:{ min:-24, max:24, title:{display:true,text:'신중 ←        → 능동', color:'#5C5748', font:{size:11,weight:'700'}}, grid:{color:'rgba(43,40,32,0.06)'}, ticks:{color:'#7A7566', font:{size:10.5}} }
+    },
+    plugins:{
+      legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, usePointStyle:true, color:'#3D3A30', font:{size:11.5,weight:'600'}, padding:10 } },
+      tooltip:{
+        backgroundColor:'#2B2820', padding:10, cornerRadius:8, displayColors:true, titleFont:{size:12.5,weight:'700'}, bodyFont:{size:11.5},
+        callbacks:{
+          label:(ctx)=>{
+            const r = ctx.raw;
+            if(anon){
+              return [`유형: ${DISC_META[r.type].label}`, `좌표: (${r.x}, ${r.y})`];
+            }
+            return [`${displayName(r)} · ${r.group}`, `유형: ${DISC_META[r.type].label}`, `좌표: (${r.x}, ${r.y})`];
+          }
+        }
+      }
+    },
+    onClick:(evt, elements, chart)=>{
+      if(!elements.length) return;
+      const el = elements[0];
+      const raw = chart.data.datasets[el.datasetIndex].data[el.index];
+      onClickPoint(raw.id);
+    }
+  };
+}
+
+function typeCounts(students){
+  const c = { D:0, I:0, S:0, C:0, B:0 };
+  students.forEach(s=> c[classify(s.x,s.y)]++ );
+  return c;
+}
+
+/* 모둠 밸런스 점수: 유형 분포의 섀넌 엔트로피를 0~100으로 정규화.
+   인원수가 2명 미만이면 판단 자체가 무의미하므로 판정을 보류한다. */
+function computeBalance(students){
+  const n = students.length;
+  if(n < 2) return { score:null, label:'표본 부족', dominant:null, dominantRatio:null, counts:typeCounts(students), n };
+  const counts = typeCounts(students);
+  const probs = Object.values(counts).filter(c=>c>0).map(c=>c/n);
+  const maxCategories = Math.min(5, n);
+  const maxEntropy = maxCategories > 1 ? Math.log2(maxCategories) : 1;
+  const entropy = -probs.reduce((sum,p)=> sum + p*Math.log2(p), 0);
+  const score = maxEntropy > 0 ? Math.round((entropy/maxEntropy)*100) : 100;
+  const dominant = Object.keys(counts).reduce((a,b)=> counts[b]>counts[a] ? b : a, 'D');
+  const dominantRatio = Math.round((counts[dominant]/n)*100);
+  let label;
+  if(score>=80) label='매우 균형';
+  else if(score>=60) label='균형';
+  else if(score>=40) label='다소 쏠림';
+  else label='쏠림 강함';
+  return { score, label, dominant, dominantRatio, counts, n };
+}
+
+function balanceColor(score){
+  if(score==null) return '#B5AF9E';
+  if(score>=60) return '#5FA777';
+  if(score>=40) return '#E4A93B';
+  return '#D9704F';
+}
+
+/* =========================================================
+   6. TAB 1: 전체 분석
+========================================================= */
+function renderOverview(){
+  const students = STATE.students;
+  const counts = typeCounts(students);
+
+  // 상단 통계 칩
+  const statRow = document.getElementById('overviewStats');
+  statRow.innerHTML = `<div class="stat-chip"><div class="num">${students.length}</div><div class="lab">전체 인원</div></div>` +
+    Object.keys(DISC_META).map(t=>`<div class="stat-chip" style="border-left-color:${DISC_META[t].color}"><div class="num">${counts[t]}</div><div class="lab">${typeSwatch(t)}${DISC_META[t].label}</div></div>`).join('');
+
+  // 도넛
+  destroyChart('overviewDonut');
+  CHARTS.overviewDonut = new Chart(document.getElementById('overviewDonut'), {
+    type:'doughnut',
+    data:{
+      labels: Object.keys(DISC_META).map(t=>DISC_META[t].label),
+      datasets:[{ data:Object.keys(DISC_META).map(t=>counts[t]), backgroundColor:Object.keys(DISC_META).map(t=>DISC_META[t].color), borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{ maintainAspectRatio:false, plugins:{ legend:{position:'bottom', labels:{boxWidth:10,boxHeight:10,color:'#3D3A30',font:{size:11.5,weight:'600'},padding:10} }, tooltip:{titleFont:{size:12.5,weight:'700'},bodyFont:{size:11.5}} }, cutout:'60%' }
+  });
+
+  // 모둠별 구성 막대
+  destroyChart('overviewBar');
+  const groups = STATE.groups;
+  const typeKeys = Object.keys(DISC_META);
+  CHARTS.overviewBar = new Chart(document.getElementById('overviewBar'), {
+    type:'bar',
+    data:{
+      labels: groups,
+      datasets: typeKeys.map(t=>({
+        label: DISC_META[t].label,
+        backgroundColor: DISC_META[t].color,
+        data: groups.map(g => students.filter(s=>s.group===g && classify(s.x,s.y)===t).length)
+      }))
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{ x:{ stacked:true, grid:{display:false}, ticks:{color:'#5C5748',font:{size:11,weight:'600'}} }, y:{ stacked:true, ticks:{stepSize:1,color:'#7A7566',font:{size:10.5}}, grid:{color:'rgba(43,40,32,0.06)'} } },
+      plugins:{ legend:{position:'bottom', labels:{boxWidth:10,boxHeight:10,color:'#3D3A30',font:{size:11},padding:8}}, tooltip:{titleFont:{size:12.5,weight:'700'},bodyFont:{size:11.5}} }
+    }
+  });
+
+  // 전체 산점도
+  destroyChart('overviewScatter');
+  CHARTS.overviewScatter = new Chart(document.getElementById('overviewScatter'), {
+    type:'scatter',
+    data:{ datasets: makeScatterDatasets(students) },
+    options: scatterBaseOptions(openDetailPanel, false),
+    plugins:[quadrantPlugin(), pointNumberPlugin()]
+  });
+}
+
+/* =========================================================
+   7. TAB 2: 모둠별 분석
+========================================================= */
+function renderGroupFilterRow(){
+  const row = document.getElementById('groupFilterRow');
+  const buttons = ['all', ...STATE.groups];
+  row.innerHTML = buttons.map(g=>{
+    const label = g==='all' ? '전체보기' : g;
+    const active = STATE.activeGroup===g ? 'active' : '';
+    return `<button class="chip-btn ${active}" data-group="${g}">${label}</button>`;
+  }).join('');
+  row.querySelectorAll('.chip-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      STATE.activeGroup = btn.dataset.group;
+      renderGroupTab();
+    });
+  });
+}
+
+function renderBalanceStrip(){
+  const strip = document.getElementById('balanceStrip');
+  strip.innerHTML = STATE.groups.map(g=>{
+    const members = STATE.students.filter(s=>s.group===g);
+    const b = computeBalance(members);
+    const scoreText = b.score==null ? '—' : b.score+'점';
+    const warn = (b.dominantRatio!=null && b.dominantRatio>=60) ? '<span class="warn-tag">쏠림 주의</span>' : '';
+    const active = STATE.activeGroup===g ? 'active' : '';
+    return `<div class="balance-card ${active}" data-group="${g}">
+      <div class="bc-top"><span>${g}</span><span class="bc-n">${members.length}명</span></div>
+      <div class="bc-bar"><div class="bc-fill" style="width:${b.score||0}%;background:${balanceColor(b.score)}"></div></div>
+      <div class="bc-bottom"><span>${b.label} · ${scoreText}</span>${warn}</div>
+    </div>`;
+  }).join('');
+  strip.querySelectorAll('.balance-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      STATE.activeGroup = card.dataset.group;
+      renderGroupTab();
+    });
+  });
+}
+
+function renderGroupTab(){
+  renderGroupFilterRow();
+  renderBalanceStrip();
+  const g = STATE.activeGroup;
+  const students = g==='all' ? STATE.students : STATE.students.filter(s=>s.group===g);
+  document.getElementById('groupScatterTitle').textContent = (g==='all' ? '전체' : g) + ' 산점도';
+  document.getElementById('groupDonutSub').textContent = (g==='all' ? '전체' : g) + '의 유형 분포';
+
+  const counts = typeCounts(students);
+  const avgX = students.length ? (students.reduce((a,s)=>a+s.x,0)/students.length).toFixed(1) : '0';
+  const avgY = students.length ? (students.reduce((a,s)=>a+s.y,0)/students.length).toFixed(1) : '0';
+  const balance = computeBalance(students);
+  document.getElementById('groupStats').innerHTML = `
+    <div class="stat-chip"><div class="num">${students.length}</div><div class="lab">인원</div></div>
+    <div class="stat-chip"><div class="num">${avgX}</div><div class="lab">평균 X(사람·업무)</div></div>
+    <div class="stat-chip"><div class="num">${avgY}</div><div class="lab">평균 Y(능동·신중)</div></div>
+    <div class="stat-chip" style="border-left-color:${balanceColor(balance.score)}"><div class="num">${balance.score==null?'—':balance.score}</div><div class="lab">밸런스 점수(${balance.label})</div></div>
+  `;
+
+  destroyChart('groupScatter');
+  CHARTS.groupScatter = new Chart(document.getElementById('groupScatter'), {
+    type:'scatter',
+    data:{ datasets: makeScatterDatasets(students) },
+    options: scatterBaseOptions(openDetailPanel, false),
+    plugins:[quadrantPlugin(), pointNumberPlugin()]
+  });
+
+  destroyChart('groupDonut');
+  CHARTS.groupDonut = new Chart(document.getElementById('groupDonut'), {
+    type:'doughnut',
+    data:{
+      labels: Object.keys(DISC_META).map(t=>DISC_META[t].label),
+      datasets:[{ data:Object.keys(DISC_META).map(t=>counts[t]), backgroundColor:Object.keys(DISC_META).map(t=>DISC_META[t].color), borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{ maintainAspectRatio:false, plugins:{ legend:{position:'bottom', labels:{boxWidth:10,boxHeight:10,color:'#3D3A30',font:{size:11.5,weight:'600'},padding:10} }, tooltip:{titleFont:{size:12.5,weight:'700'},bodyFont:{size:11.5}} }, cutout:'60%' }
+  });
+}
+
+/* ---------- 모둠 리포트 인쇄 ---------- */
+function buildGroupPrintArea(){
+  const g = STATE.activeGroup;
+  const students = g==='all' ? STATE.students : STATE.students.filter(s=>s.group===g);
+  const b = computeBalance(students);
+  const title = g==='all' ? '전체 학급' : g;
+  const html = `
+    <h1 style="font-family:'Noto Serif KR',serif;font-size:22px;margin:0 0 4px;">${title} DISC 리포트</h1>
+    <p style="color:#555;font-size:13px;margin:0 0 16px;">인원 ${students.length}명 · 밸런스 ${b.score==null?'—':b.score+'점 ('+b.label+')'} · 생성일 ${new Date().toLocaleDateString('ko-KR')}</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+      ${students.map(s=>{
+        const t = classify(s.x,s.y);
+        const fb = buildFeedback(s);
+        return `<div class="p-student">
+          <div style="font-weight:700;font-size:14px;">${displayName(s)} <span style="font-weight:500;color:#777;font-size:11px;">(${s.group})</span></div>
+          <div style="font-size:12px;color:${DISC_META[t].color};font-weight:700;margin:2px 0 6px;">${DISC_META[t].label} · X ${s.x} / Y ${s.y}</div>
+          <div style="font-size:11.5px;line-height:1.55;color:#333;"><b>강점</b> ${fb.strength}</div>
+          <div style="font-size:11.5px;line-height:1.55;color:#333;margin-top:4px;"><b>지도 방안</b> ${fb.guide}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('printArea').innerHTML = html;
+}
+
+function printGroupReport(){
+  buildGroupPrintArea();
+  document.body.classList.add('print-group');
+  window.print();
+}
+
+/* ---------- 팀 로스터 PDF 공용 렌더러 (익명 1페이지 + 실명 1페이지) ---------- */
+function buildRosterPageHTML(title, subtitle, teamsData, anonymize){
+  return `
+    <div class="print-page">
+      <div class="pp-header">
+        <div class="pp-badge">DISC</div>
+        <div>
+          <div class="pp-title">${title}</div>
+          <div class="pp-subtitle">${subtitle}</div>
+        </div>
+        <div class="pp-tag">${anonymize ? '익명 버전' : '실명 버전'}</div>
+      </div>
+      <div class="pp-grid">
+        ${teamsData.map(team => `
+          <div class="pp-team">
+            <div class="pp-team-head"><span>${team.label}</span><span class="pp-team-meta">${team.meta}</span></div>
+            ${team.members.length ? team.members.map(m => `
+              <div class="pp-member">
+                <span class="pp-dot" style="background:${m.color}"></span>
+                <span class="pp-name">${anonymize ? ('학생 ' + m.id) : m.name}</span>
+                <span class="pp-type">${m.typeLabel}</span>
+              </div>
+            `).join('') : '<div class="pp-empty">비어 있음</div>'}
+          </div>
+        `).join('')}
+      </div>
+      <div class="pp-footer">DISC 팀빌딩 대시보드 · ${new Date().toLocaleDateString('ko-KR')}</div>
+    </div>
+  `;
+}
+
+/* ---------- 모둠 재구성 결과 PDF 저장 ---------- */
+function buildReshufflePrintArea(){
+  const groups = reshuffle.customTeams || STATE.groups;
+  const teamsData = groups.map(g=>{
+    const members = STATE.students.filter(s => groupOfStudent(s)===g);
+    const b = computeBalance(members);
+    return {
+      label: g,
+      meta: `${members.length}명 · 밸런스 ${b.score==null?'—':b.score+'점'}`,
+      members: members.map(s=>{
+        const t = classify(s.x, s.y);
+        return { id:s.id, name:s.name, color:DISC_META[t].color, typeLabel:DISC_META[t].label };
+      })
+    };
+  });
+  const subtitle = `전체 ${STATE.students.length}명 · ${groups.length}개 팀`;
+  document.getElementById('printArea').innerHTML =
+    buildRosterPageHTML('모둠 구성 결과', subtitle, teamsData, true) +
+    buildRosterPageHTML('모둠 구성 결과', subtitle, teamsData, false);
+}
+
+function printReshuffleReport(){
+  buildReshufflePrintArea();
+  document.body.classList.add('print-group');
+  window.print();
+}
+
+/* ---------- 팀 빌딩(드래프트) 결과 PDF 저장 ---------- */
+function buildDraftPrintArea(){
+  const teamCount = draft.teamCount;
+  const teamsData = Array.from({length: teamCount}, (_,i)=>i).map(i=>{
+    const capId = draft.captains[i];
+    const capStudent = STATE.students.find(s=>s.id===capId);
+    const memberIds = draft.picks[i] || [];
+    const members = memberIds.map(mid=>{
+      const s = STATE.students.find(x=>x.id===mid);
+      const t = classify(s.x, s.y);
+      const revealed = draft.revealed.includes(mid);
+      return {
+        id: s.id,
+        name: revealed ? s.name : '비공개 팀원',
+        color: revealed ? DISC_META[t].color : '#B5AF9E',
+        typeLabel: revealed ? DISC_META[t].label : ''
+      };
+    });
+    return {
+      label: `👑 ${i+1}팀`,
+      meta: `조장 ${capStudent ? capStudent.name : '-'}`,
+      members
+    };
+  });
+  const subtitle = `${teamCount}개 팀`;
+  document.getElementById('printArea').innerHTML =
+    buildRosterPageHTML('팀 빌딩 결과', subtitle, teamsData, true) +
+    buildRosterPageHTML('팀 빌딩 결과', subtitle, teamsData, false);
+}
+
+function printDraftReport(){
+  buildDraftPrintArea();
+  document.body.classList.add('print-group');
+  window.print();
+}
+
+/* =========================================================
+   8. TAB 3: 개별 분석
+========================================================= */
+function renderIndividualScatter(highlightId){
+  destroyChart('individualScatter');
+  const datasets = makeScatterDatasets(STATE.students);
+  if(highlightId){
+    datasets.forEach(ds=>{
+      ds.pointRadius = ds.data.map(d=> d.id===highlightId ? 12 : 5);
+      ds.pointBorderWidth = ds.data.map(d=> d.id===highlightId ? 3 : 1);
+      ds.backgroundColor = ds.data.map(d=> d.id===highlightId ? DISC_META[d.type].color : hexA(DISC_META[d.type].color,0.35));
+    });
+  }
+  CHARTS.individualScatter = new Chart(document.getElementById('individualScatter'), {
+    type:'scatter',
+    data:{ datasets },
+    options: scatterBaseOptions(openDetailPanel, false),
+    plugins:[quadrantPlugin(), pointNumberPlugin()]
+  });
+}
+
+function renderStudentGrid(filterText){
+  const grid = document.getElementById('studentGrid');
+  const q = (filterText||'').trim().toLowerCase();
+  const list = STATE.students.filter(s => {
+    if(!q) return true;
+    if(s.group.toLowerCase().includes(q)) return true;
+    return STATE.privacyUnlocked && s.name.toLowerCase().includes(q);
+  });
+  if(!list.length){
+    grid.innerHTML = `<div class="empty-hint">검색 결과가 없습니다.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(s=>{
+    const t = classify(s.x,s.y);
+    return `<div class="student-card" data-id="${s.id}">
+      <div class="name">${displayName(s)}</div>
+      <div class="grp">${s.group}</div>
+      <span class="type-badge" style="background:${hexA(DISC_META[t].color,0.15)};color:${DISC_META[t].color}">${DISC_META[t].label}</span>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.student-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const id = Number(card.dataset.id);
+      renderIndividualScatter(id);
+      openDetailPanel(id);
+    });
+  });
+}
+
+function renderIndividualTab(){
+  renderIndividualScatter(STATE.selectedStudentId);
+  renderStudentGrid(document.getElementById('studentSearch').value);
+}
+
+/* =========================================================
+   9. 상세 패널 (클릭 → 화면 분할)
+========================================================= */
+function openDetailPanel(studentId){
+  const student = STATE.students.find(s=>s.id===studentId);
+  if(!student) return;
+  STATE.selectedStudentId = studentId;
+  const fb = buildFeedback(student);
+  const type = classify(student.x, student.y);
+  const color = DISC_META[fb.type] ? DISC_META[fb.type].color : DISC_META[type].color;
+
+  const xPct = Math.max(0, Math.min(100, ((student.x+24)/48)*100));
+  const yPct = Math.max(0, Math.min(100, ((student.y+24)/48)*100));
+
+  document.getElementById('detailPanelInner').innerHTML = `
+    <button class="panel-print" id="panelPrintBtn" title="인쇄 / PDF 저장"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v4h12v-4"/></svg></button>
+    <button class="panel-close" id="panelCloseBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    <div class="panel-head">
+      <div class="pid">No.${student.id} · ${student.group}</div>
+      <h2>${displayName(student)}</h2>
+      <span class="type-badge" style="background:${hexA(DISC_META[type].color,0.15)};color:${DISC_META[type].color}">${DISC_META[type].label}</span>
+      <div class="coord-row">
+        <div class="coord-box"><div class="k">X (사람·업무)</div><div class="v">${student.x}</div></div>
+        <div class="coord-box"><div class="k">Y (능동·신중)</div><div class="v">${student.y}</div></div>
+      </div>
+      <div class="axis-bar-wrap">
+        <div class="label-row"><span>업무 지향</span><span>사람 지향</span></div>
+        <div class="axis-bar"><div class="fill" style="left:${xPct}%;width:3px;background:${color}"></div></div>
+      </div>
+      <div class="axis-bar-wrap">
+        <div class="label-row"><span>신중</span><span>능동</span></div>
+        <div class="axis-bar"><div class="fill" style="left:${yPct}%;width:3px;background:${color}"></div></div>
+      </div>
+    </div>
+    <div class="feedback-card">
+      <div class="ftitle">${fb.title}</div>
+      <div class="fsection"><div class="flab">강점</div><p>${fb.strength}</p></div>
+      <div class="fsection"><div class="flab">지도 방안</div><p>${fb.guide}</p></div>
+      <div class="fsection"><div class="flab">유의할 점</div><p>${fb.caution}</p></div>
+    </div>
+    <div class="info-note">※ 좌표는 문항 1~10(능동/신중), 11~20(사람/업무) 합계에서 30을 뺀 값이며, 각 축 -3~+3 범위는 균형형으로 분류됩니다.</div>
+  `;
+  document.getElementById('layoutWrap').classList.add('panel-open');
+  document.getElementById('panelCloseBtn').addEventListener('click', closeDetailPanel);
+  document.getElementById('panelPrintBtn').addEventListener('click', ()=>{
+    document.body.classList.add('print-panel');
+    window.print();
+  });
+}
+
+function closeDetailPanel(){
+  document.getElementById('layoutWrap').classList.remove('panel-open');
+  STATE.selectedStudentId = null;
+}
+
+/* =========================================================
+   10. TAB 4: 팀 빌딩 (드래프트)
+========================================================= */
+function resetDraftState(teamCount){
+  draft = {
+    teamCount: teamCount || 4,
+    phase: 'setup', // setup -> captains -> drafting
+    captains: {},   // teamIndex -> studentId
+    picks: {},      // teamIndex -> [studentId,...]
+    pickedIds: [],  // all picked ids (captains + drafted)
+    currentPick: 0, // overall pick counter for snake order
+    revealed: []    // studentIds individually revealed
+  };
+  saveDraft();
+}
+
+function saveDraft(){
+  try{ localStorage.setItem(STORAGE_DRAFT_KEY, JSON.stringify(draft)); }catch(e){}
+}
+function restoreDraft(){
+  try{
+    const raw = localStorage.getItem(STORAGE_DRAFT_KEY);
+    if(raw){ draft = JSON.parse(raw); return true; }
+  }catch(e){}
+  return false;
+}
+
+function snakeTeamForPick(pickIndex, teamCount){
+  const round = Math.floor(pickIndex / teamCount);
+  const pos = pickIndex % teamCount;
+  return (round % 2 === 0) ? pos : (teamCount - 1 - pos);
+}
+
+function renderDraftTab(){
+  if(!draft) draft = restoreDraft() ? draft : (resetDraftState(4), draft);
+  document.getElementById('teamCountSelect').value = String(draft.teamCount);
+
+  ['setup','captains','drafting'].forEach(p=>{
+    document.getElementById('phase-'+p).classList.toggle('active', draft.phase===p);
+  });
+
+  if(draft.phase==='captains') renderCaptainGrid();
+  if(draft.phase==='drafting') renderDraftBoard();
+}
+
+function renderCaptainGrid(){
+  const grid = document.getElementById('captainGrid');
+  const taken = new Set(Object.values(draft.captains));
+  let html = '';
+  for(let i=0;i<draft.teamCount;i++){
+    const current = draft.captains[i];
+    html += `<div class="field">
+      <label>${i+1}팀 조장</label>
+      <select data-team="${i}" class="captainSelect">
+        <option value="">-- 선택 --</option>
+        ${STATE.students.map(s=>{
+          const disabled = (taken.has(s.id) && current!==s.id) ? 'disabled' : '';
+          const selected = current===s.id ? 'selected' : '';
+          return `<option value="${s.id}" ${disabled} ${selected}>${displayName(s)} (${s.group})</option>`;
+        }).join('')}
+      </select>
+    </div>`;
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll('.captainSelect').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const team = Number(sel.dataset.team);
+      if(sel.value) draft.captains[team] = Number(sel.value);
+      else delete draft.captains[team];
+      saveDraft();
+      renderCaptainGrid();
+    });
+  });
+}
+
+function renderDraftBoard(){
+  const teamCount = draft.teamCount;
+  const currentTeam = snakeTeamForPick(draft.currentPick, teamCount);
+  const pickedTotal = draft.pickedIds.length - Object.keys(draft.captains).length;
+  const totalAvailable = STATE.students.length - teamCount;
+  const finished = pickedTotal >= totalAvailable;
+
+  document.getElementById('turnText').textContent = finished ? '드래프트 완료!' : `${currentTeam+1}팀 (${nameOf(draft.captains[currentTeam])}) 차례`;
+  document.getElementById('draftProgress').textContent = `영입 완료 ${pickedTotal} / ${totalAvailable}`;
+
+  // 산점도: 아직 뽑히지 않은 학생만 (조장 제외)
+  const pool = STATE.students.filter(s => !draft.pickedIds.includes(s.id));
+  destroyChart('draftScatter');
+  const onClick = finished ? ()=>{} : (id)=> draftPick(id);
+  CHARTS.draftScatter = new Chart(document.getElementById('draftScatter'), {
+    type:'scatter',
+    data:{ datasets: makeScatterDatasets(pool, {anon:true}) },
+    options: scatterBaseOptions(onClick, true),
+    plugins:[quadrantPlugin(), pointNumberPlugin()]
+  });
+
+  // 팀 보드
+  const board = document.getElementById('teamBoard');
+  board.innerHTML = '';
+  for(let i=0;i<teamCount;i++){
+    const capId = draft.captains[i];
+    const members = draft.picks[i] || [];
+    const col = document.createElement('div');
+    col.className = 'team-col' + (!finished && i===currentTeam ? ' current' : '');
+    col.innerHTML = `<div class="cap">${ICON_CROWN}${i+1}팀 · ${nameOf(capId)}</div>` +
+      (members.length ? members.map(mid=>{
+        const revealed = draft.revealed.includes(mid);
+        const label = revealed ? `${nameOf(mid)} (${groupOf(mid)})` : `${ICON_EYE_OFF}비공개 팀원`;
+        return `<div class="member ${revealed?'revealed':''}" data-id="${mid}"><span class="mtext">${label}</span>${revealed?'':'<span style=\"opacity:.6\">공개하기</span>'}</div>`;
+      }).join('') : `<div class="empty-hint">아직 영입된 팀원이 없습니다</div>`);
+    board.appendChild(col);
+  }
+  board.querySelectorAll('.member').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const id = Number(el.dataset.id);
+      if(!draft.revealed.includes(id)){ draft.revealed.push(id); saveDraft(); renderDraftBoard(); }
+    });
+  });
+}
+
+function nameOf(id){ const s = STATE.students.find(x=>x.id===id); return s ? displayName(s) : '-'; }
+function groupOf(id){ const s = STATE.students.find(x=>x.id===id); return s ? s.group : '-'; }
+
+function draftPick(studentId){
+  if(draft.pickedIds.includes(studentId)) return;
+  const teamCount = draft.teamCount;
+  const team = snakeTeamForPick(draft.currentPick, teamCount);
+  if(!draft.picks[team]) draft.picks[team] = [];
+  draft.picks[team].push(studentId);
+  draft.pickedIds.push(studentId);
+  draft.currentPick++;
+  saveDraft();
+  renderDraftBoard();
+}
+
+/* =========================================================
+   10b. TAB 5: 모둠 재구성 (드래그 앤 드롭 시뮬레이터)
+========================================================= */
+function resetReshuffleState(){
+  reshuffle = {
+    overrides:{},    // studentId -> 새로 배정된 모둠명 (원본 모둠과 다를 때만 기록)
+    customTeams:null // 자동 배치로 생성된 팀 라벨 목록(예: ['1팀','2팀',...]). null이면 원본 모둠(STATE.groups) 사용
+  };
+  saveReshuffle();
+}
+
+/* 성향 기반 자동 모둠 배치.
+   mode 'hetero' = 이질집단: 유형별로 뭉친 목록(D...D,I...I,S...S,C...C,B...B)을 팀 개수만큼
+                   라운드로빈(순환)으로 한 명씩 돌아가며 배정 → 팀마다 여러 유형이 고르게 섞인다.
+   mode 'homo'   = 동질집단: 같은 유형은 절대 서로 다른 팀에 쪼개 나눠지지 않는 것을 최우선으로 한다.
+                   - 팀 수가 유형 수(최대 5) 이하이면: 유형(전체 인원 그대로)을 통째로, 현재 인원이
+                     가장 적은 팀부터 채우는 방식(LPT)으로 배정 → 팀 수와 유형 수가 같으면 팀마다
+                     정확히 한 유형만 들어가는 완전한 순수 팀이 되고, 팀 수가 더 적으면 작은 유형 몇 개가
+                     통째로 한 팀에 합쳐질 뿐 한 유형이 여러 팀에 걸쳐 흩어지는 일은 없다.
+                   - 팀 수가 유형 수보다 많으면: 그때만 인원이 많은 유형부터 필요한 만큼만 여러 팀으로
+                     나누어 담는다(그래도 나뉜 조각들은 전부 같은 유형끼리만 모여 있다). */
+function autoAssignTeams(mode, teamCount){
+  const typeOrder = ['D','I','S','C','B'];
+  const byType = { D:[], I:[], S:[], C:[], B:[] };
+  STATE.students.forEach(s => byType[classify(s.x, s.y)].push(s));
+  typeOrder.forEach(t=> byType[t].sort((a,b)=> Math.atan2(a.y,a.x) - Math.atan2(b.y,b.x)));
+
+  const teamLabels = Array.from({length: teamCount}, (_,i)=> (i+1)+'팀');
+  const overrides = {};
+
+  if(mode === 'hetero'){
+    const ordered = typeOrder.flatMap(t=> byType[t]);
+    ordered.forEach((s,i)=>{ overrides[s.id] = teamLabels[i % teamCount]; });
+  }else{
+    const groups = typeOrder.map(t=> byType[t]).filter(arr=> arr.length > 0);
+    const numTypes = groups.length;
+
+    if(teamCount <= numTypes){
+      // LPT: 인원이 많은 유형부터, 현재 인원이 가장 적은 팀에 통째로 배정 (유형을 쪼개지 않음)
+      const sorted = groups.slice().sort((a,b)=> b.length - a.length);
+      const bins = Array.from({length: teamCount}, ()=> []);
+      const binSizes = new Array(teamCount).fill(0);
+      sorted.forEach(group=>{
+        let minIdx = 0;
+        for(let i=1;i<teamCount;i++){ if(binSizes[i] < binSizes[minIdx]) minIdx = i; }
+        bins[minIdx].push(...group);
+        binSizes[minIdx] += group.length;
+      });
+      bins.forEach((bin, i)=>{ bin.forEach(s=>{ overrides[s.id] = teamLabels[i]; }); });
+    }else{
+      // 팀 수가 유형 수보다 많음: 인원이 많은 유형부터 필요한 만큼만 여러 팀으로 균등 분할
+      const teamsPerType = groups.map(()=> 1);
+      let remaining = teamCount - numTypes;
+      while(remaining > 0){
+        let worstIdx = 0, worstRatio = -1;
+        groups.forEach((g,i)=>{
+          const ratio = g.length / teamsPerType[i];
+          if(ratio > worstRatio){ worstRatio = ratio; worstIdx = i; }
+        });
+        teamsPerType[worstIdx]++;
+        remaining--;
+      }
+      let teamCursor = 0;
+      groups.forEach((group, i)=>{
+        const parts = teamsPerType[i];
+        const n = group.length;
+        const base = Math.floor(n / parts), rem = n % parts;
+        let idx = 0;
+        for(let p=0; p<parts; p++){
+          const size = base + (p < rem ? 1 : 0);
+          for(let k=0;k<size;k++){ overrides[group[idx].id] = teamLabels[teamCursor]; idx++; }
+          teamCursor++;
+        }
+      });
+    }
+  }
+
+  reshuffle.overrides = overrides;
+  reshuffle.customTeams = teamLabels;
+  saveReshuffle();
+  renderReshuffleTab();
+}
+
+/* 팀 빌딩(드래프트) 탭에서 만든 팀 구성을 모둠 재구성 보드로 불러온다.
+   아직 드래프트되지 않은 학생이 있으면 "미배정" 칸을 따로 만들어 두어, 드래그로 마저 배정할 수 있게 한다. */
+function importDraftIntoReshuffle(){
+  if(!draft || draft.phase !== 'drafting'){
+    alert('먼저 "팀 빌딩" 탭에서 조장을 선택하고 드래프트를 시작해주세요.');
+    return;
+  }
+  if(Object.keys(draft.captains).length === 0){
+    alert('팀 빌딩 탭에서 조장을 먼저 선택해주세요.');
+    return;
+  }
+  if(!confirm('팀 빌딩에서 만든 모둠을 불러올까요? 지금까지의 모둠 재구성 내용은 덮어써집니다.')) return;
+
+  const teamCount = draft.teamCount;
+  const teamLabels = Array.from({length: teamCount}, (_,i)=> (i+1)+'팀');
+  const overrides = {};
+  for(let i=0; i<teamCount; i++){
+    const capId = draft.captains[i];
+    if(capId != null) overrides[capId] = teamLabels[i];
+    (draft.picks[i] || []).forEach(mid=>{ overrides[mid] = teamLabels[i]; });
+  }
+  const assignedIds = new Set(Object.keys(overrides).map(Number));
+  const hasUnassigned = STATE.students.some(s => !assignedIds.has(s.id));
+  STATE.students.forEach(s=>{
+    if(!assignedIds.has(s.id)) overrides[s.id] = '미배정';
+  });
+
+  reshuffle.overrides = overrides;
+  reshuffle.customTeams = hasUnassigned ? [...teamLabels, '미배정'] : teamLabels;
+  saveReshuffle();
+  renderReshuffleTab();
+}
+
+function saveReshuffle(){
+  try{ localStorage.setItem(STORAGE_RESHUFFLE_KEY, JSON.stringify(reshuffle)); }catch(e){}
+}
+
+function restoreReshuffle(){
+  try{
+    const raw = localStorage.getItem(STORAGE_RESHUFFLE_KEY);
+    if(raw){ reshuffle = JSON.parse(raw); return true; }
+  }catch(e){}
+  return false;
+}
+
+function groupOfStudent(s){
+  return (reshuffle && reshuffle.overrides[s.id]) ? reshuffle.overrides[s.id] : s.group;
+}
+
+function renderReshuffleTab(){
+  if(!reshuffle) reshuffle = restoreReshuffle() ? reshuffle : (resetReshuffleState(), reshuffle);
+  if(reshuffle.customTeams === undefined) reshuffle.customTeams = null; // 이전 버전 localStorage 호환
+  const board = document.getElementById('reshuffleBoard');
+  const groups = reshuffle.customTeams || STATE.groups;
+
+  board.innerHTML = groups.map(g=>{
+    const members = STATE.students.filter(s => groupOfStudent(s)===g);
+    const b = computeBalance(members);
+    return `<div class="reshuffle-col" data-group="${g}">
+      <div class="rc-head">
+        <div class="rc-title"><span>${g}</span><span class="rc-n">${members.length}명</span></div>
+        <div class="bc-bar"><div class="bc-fill" style="width:${b.score||0}%;background:${balanceColor(b.score)}"></div></div>
+        <div class="rc-sub">${b.score==null ? '인원 부족' : b.label+' · '+b.score+'점'}</div>
+      </div>
+      <div class="rc-body" data-drop="${g}">
+        ${members.map(s=>{
+          const t = classify(s.x,s.y);
+          return `<div class="rc-card" draggable="true" data-id="${s.id}">
+            <span class="type-badge" style="background:${hexA(DISC_META[t].color,0.15)};color:${DISC_META[t].color}">${DISC_META[t].label}</span>
+            <span class="rc-name">${displayName(s)}</span>
+          </div>`;
+        }).join('') || '<div class="empty-hint">비어 있음</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  board.querySelectorAll('.rc-card').forEach(card=>{
+    card.addEventListener('dragstart', (e)=>{
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(()=> card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+    card.addEventListener('click', ()=> openDetailPanel(Number(card.dataset.id)));
+  });
+
+  board.querySelectorAll('.rc-body').forEach(zone=>{
+    zone.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      zone.closest('.reshuffle-col').classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', ()=> zone.closest('.reshuffle-col').classList.remove('drag-over'));
+    zone.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      zone.closest('.reshuffle-col').classList.remove('drag-over');
+      const id = Number(e.dataTransfer.getData('text/plain'));
+      if(!id) return;
+      reshuffle.overrides[id] = zone.dataset.drop;
+      saveReshuffle();
+      renderReshuffleTab();
+    });
+  });
+}
+
+function bindReshuffle(){
+  document.getElementById('reshuffleResetBtn').addEventListener('click', ()=>{
+    if(!confirm('모둠 재구성을 원래 모둠 배정으로 초기화할까요?')) return;
+    resetReshuffleState();
+    renderReshuffleTab();
+  });
+  document.getElementById('autoHeteroBtn').addEventListener('click', ()=>{
+    const n = Number(document.getElementById('autoTeamCountSelect').value);
+    autoAssignTeams('hetero', n);
+  });
+  document.getElementById('autoHomoBtn').addEventListener('click', ()=>{
+    const n = Number(document.getElementById('autoTeamCountSelect').value);
+    autoAssignTeams('homo', n);
+  });
+  document.getElementById('reshufflePrintBtn').addEventListener('click', printReshuffleReport);
+  document.getElementById('importDraftBtn').addEventListener('click', importDraftIntoReshuffle);
+}
+
+/* =========================================================
+   11. 이벤트 바인딩
+========================================================= */
+function bindTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      const tab = btn.dataset.tab;
+      document.getElementById('tab-'+tab).classList.add('active');
+      STATE.activeTab = tab;
+      closeDetailPanel();
+      if(tab==='overview') renderOverview();
+      if(tab==='group') renderGroupTab();
+      if(tab==='individual') renderIndividualTab();
+      if(tab==='draft') renderDraftTab();
+      if(tab==='reshuffle') renderReshuffleTab();
+    });
+  });
+}
+
+function updatePrivacyBtn(){
+  const btn = document.getElementById('privacyBtn');
+  btn.innerHTML = STATE.privacyUnlocked ? (ICON_UNLOCK + '개인정보 잠금') : (ICON_LOCK + '개인정보 공개');
+  btn.classList.toggle('unlocked', STATE.privacyUnlocked);
+}
+
+function refreshAfterPrivacyChange(){
+  renderAll();
+  if(STATE.selectedStudentId != null) openDetailPanel(STATE.selectedStudentId);
+}
+
+function openPrivacyModal(){
+  document.getElementById('privacyError').style.display = 'none';
+  const input = document.getElementById('privacyPasswordInput');
+  input.value = '';
+  document.getElementById('privacyBackdrop').classList.add('open');
+  setTimeout(()=> input.focus(), 50);
+}
+
+function closePrivacyModal(){
+  document.getElementById('privacyBackdrop').classList.remove('open');
+}
+
+function submitPrivacyPassword(){
+  const input = document.getElementById('privacyPasswordInput');
+  if(input.value === PRIVACY_PASSWORD){
+    STATE.privacyUnlocked = true;
+    updatePrivacyBtn();
+    closePrivacyModal();
+    refreshAfterPrivacyChange();
+  }else{
+    document.getElementById('privacyError').style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function bindPrivacy(){
+  updatePrivacyBtn();
+  document.getElementById('privacyBtn').addEventListener('click', ()=>{
+    if(STATE.privacyUnlocked){
+      STATE.privacyUnlocked = false;
+      updatePrivacyBtn();
+      refreshAfterPrivacyChange();
+    }else{
+      openPrivacyModal();
+    }
+  });
+  document.getElementById('privacyCancelBtn').addEventListener('click', closePrivacyModal);
+  document.getElementById('privacySubmitBtn').addEventListener('click', submitPrivacyPassword);
+  document.getElementById('privacyPasswordInput').addEventListener('keydown', (e)=>{
+    if(e.key==='Enter') submitPrivacyPassword();
+  });
+  document.getElementById('privacyBackdrop').addEventListener('click', (e)=>{
+    if(e.target.id==='privacyBackdrop') closePrivacyModal();
+  });
+}
+
+function bindHelp(){
+  const backdrop = document.getElementById('helpBackdrop');
+  const open = ()=> backdrop.classList.add('open');
+  const close = ()=> backdrop.classList.remove('open');
+  document.getElementById('helpBtn').addEventListener('click', open);
+  document.getElementById('helpCloseBtn').addEventListener('click', close);
+  document.getElementById('helpCloseX').addEventListener('click', close);
+  backdrop.addEventListener('click', (e)=>{ if(e.target.id==='helpBackdrop') close(); });
+}
+
+function bindDiscInfo(){
+  const backdrop = document.getElementById('discBackdrop');
+  const open = ()=> backdrop.classList.add('open');
+  const close = ()=> backdrop.classList.remove('open');
+  document.getElementById('discInfoBtn').addEventListener('click', open);
+  document.getElementById('discCloseBtn').addEventListener('click', close);
+  document.getElementById('discCloseX').addEventListener('click', close);
+  backdrop.addEventListener('click', (e)=>{ if(e.target.id==='discBackdrop') close(); });
+}
+
+/* ---------- JSON 백업 저장 / 불러오기 ---------- */
+function exportStateAsJson(){
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    appVersion: 'disc-dashboard-v1',
+    students: STATE.students,
+    groups: STATE.groups,
+    draft: draft,
+    reshuffle: reshuffle
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+  a.download = `disc-dashboard-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importStateFromJson(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const payload = JSON.parse(e.target.result);
+      if(!payload || !Array.isArray(payload.students) || !payload.students.length){
+        throw new Error('올바른 백업 파일 형식이 아닙니다.');
+      }
+      STATE.students = payload.students;
+      STATE.groups = (payload.groups && payload.groups.length)
+        ? payload.groups
+        : [...new Set(STATE.students.map(s=>s.group))].sort((a,b)=>a.localeCompare(b,'ko'));
+      STATE.usingLive = false;
+      STATE.lastUpdated = new Date();
+      if(payload.draft){ draft = payload.draft; saveDraft(); }
+      if(payload.reshuffle){ reshuffle = payload.reshuffle; saveReshuffle(); }
+      const when = payload.exportedAt ? new Date(payload.exportedAt).toLocaleString('ko-KR') : '';
+      setSyncStatus('백업 파일 사용 중' + (when ? ' · ' + when + ' 저장분' : ''), false);
+      renderAll();
+      alert('백업 파일을 불러왔습니다.');
+    }catch(err){
+      alert('파일을 불러오지 못했습니다: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function bindHeader(){
+  document.getElementById('refreshBtn').addEventListener('click', ()=>{
+    const url = localStorage.getItem(STORAGE_SHEET_KEY);
+    if(url) fetchSheetData(url, false); else { loadEmbedded(); renderAll(); }
+  });
+  document.getElementById('settingsBtn').addEventListener('click', ()=>{
+    const pop = document.getElementById('settingsPop');
+    pop.classList.toggle('open');
+    document.getElementById('sheetUrlInput').value = localStorage.getItem(STORAGE_SHEET_KEY) || '';
+  });
+  document.addEventListener('click', (e)=>{
+    const pop = document.getElementById('settingsPop');
+    if(pop.classList.contains('open') && !pop.contains(e.target) && e.target.id!=='settingsBtn'){
+      pop.classList.remove('open');
+    }
+  });
+  document.getElementById('sheetConnectBtn').addEventListener('click', ()=>{
+    const url = document.getElementById('sheetUrlInput').value.trim();
+    if(!url){ alert('구글 시트 링크를 입력해주세요.'); return; }
+    localStorage.setItem(STORAGE_SHEET_KEY, url);
+    fetchSheetData(url, false);
+    document.getElementById('settingsPop').classList.remove('open');
+  });
+  document.getElementById('sheetDisconnectBtn').addEventListener('click', ()=>{
+    localStorage.removeItem(STORAGE_SHEET_KEY);
+    loadEmbedded();
+    renderAll();
+    document.getElementById('settingsPop').classList.remove('open');
+  });
+  document.getElementById('groupPrintBtn').addEventListener('click', printGroupReport);
+  document.getElementById('exportJsonBtn').addEventListener('click', exportStateAsJson);
+  document.getElementById('importJsonBtn').addEventListener('click', ()=>{
+    document.getElementById('importJsonInput').click();
+  });
+  document.getElementById('importJsonInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(file) importStateFromJson(file);
+    e.target.value = '';
+  });
+  window.addEventListener('afterprint', ()=>{
+    document.body.classList.remove('print-panel');
+    document.body.classList.remove('print-group');
+  });
+}
+
+function bindIndividual(){
+  document.getElementById('studentSearch').addEventListener('input', (e)=>{
+    renderStudentGrid(e.target.value);
+  });
+}
+
+function bindDraft(){
+  document.getElementById('goCaptainBtn').addEventListener('click', ()=>{
+    const n = Number(document.getElementById('teamCountSelect').value);
+    if(!draft || draft.teamCount !== n || draft.phase === 'drafting'){
+      resetDraftState(n);
+    }
+    draft.phase = 'captains';
+    saveDraft();
+    renderDraftTab();
+  });
+  document.getElementById('backSetupBtn').addEventListener('click', ()=>{
+    draft.phase = 'setup';
+    saveDraft();
+    renderDraftTab();
+  });
+  document.getElementById('startDraftBtn').addEventListener('click', ()=>{
+    const chosen = Object.keys(draft.captains).length;
+    if(chosen < draft.teamCount){ alert('모든 팀의 조장을 선택해주세요.'); return; }
+    draft.phase = 'drafting';
+    draft.pickedIds = Object.values(draft.captains).slice();
+    Object.keys(draft.captains).forEach(t=>{ draft.picks[t] = []; });
+    saveDraft();
+    renderDraftTab();
+  });
+  document.getElementById('revealAllBtn').addEventListener('click', ()=>{
+    draft.revealed = draft.pickedIds.slice();
+    saveDraft();
+    renderDraftBoard();
+  });
+  document.getElementById('draftPrintBtn').addEventListener('click', printDraftReport);
+  document.getElementById('resetDraftBtn').addEventListener('click', ()=>{
+    if(!confirm('드래프트를 초기화할까요? 지금까지의 팀 구성이 사라집니다.')) return;
+    resetDraftState(draft.teamCount);
+    renderDraftTab();
+  });
+}
+
+/* =========================================================
+   12. 초기화
+========================================================= */
+function renderAll(){
+  renderOverview();
+  renderGroupTab();
+  renderIndividualTab();
+  renderDraftTab();
+  renderReshuffleTab();
+}
+
+function init(){
+  loadEmbedded();
+  bindTabs();
+  bindHeader();
+  bindPrivacy();
+  bindHelp();
+  bindDiscInfo();
+  bindIndividual();
+  bindDraft();
+  bindReshuffle();
+  renderAll();
+
+  const savedUrl = localStorage.getItem(STORAGE_SHEET_KEY) || DEFAULT_SHEET_URL;
+  if(savedUrl){
+    if(!localStorage.getItem(STORAGE_SHEET_KEY)) localStorage.setItem(STORAGE_SHEET_KEY, savedUrl);
+    fetchSheetData(savedUrl, true);
+  }
+
+  let resizeT;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeT);
+    resizeT = setTimeout(()=>{ Object.values(CHARTS).forEach(c=>c.resize()); }, 120);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
