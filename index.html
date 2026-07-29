@@ -51,7 +51,7 @@ const LINK_URLS = [
       'sodium_potassium_pump_simulator_v2.html', // 9. 빈 버튼
       'https://notebook.google.com/notebook/ec5e15f3-07d8-4469-b12d-219c0f21f4f2?pli=1', // 10. 빈 버튼
       'https://app.briskteaching.com/ws/wnjrm8', // 11. 빈 버튼
-      'https://docs.google.com/document/d/1FyawCM_o5MmT0wHNVGH0UDyaQ8TS1_cmVtYZWZFHARY/copy)' // 12. 빈 버튼
+      'https://docs.google.com/document/d/1FyawCM_o5MmT0wHNVGH0UDyaQ8TS1_cmVtYZWZFHARY/copy' // 12. 빈 버튼
 ];
 document.querySelectorAll('[data-link-id]').forEach(button=>{const index=Number(button.dataset.linkId)-1;button.href=LINK_URLS[index]||'#';button.addEventListener('click',event=>{if(!LINK_URLS[index]||LINK_URLS[index]==='#'){event.preventDefault();alert('아직 링크가 등록되지 않았습니다. HTML 파일의 LINK_URLS에 주소를 입력해 주세요.')}})});
 </script></body></html>
