@@ -37,7 +37,7 @@
 <span class="card-label empty-label">브리스크 티칭</span>
 <span class="card-arrow" aria-hidden="true">↗</span></a><a class="resource-card empty-card" href="#" target="_blank" rel="noopener noreferrer" aria-label="추가 자료 링크 12" data-link-id="12">
 <span class="card-icon" aria-hidden="true">＋</span>
-<span class="card-label empty-label">링크 추가</span>
+<span class="card-label empty-label">Snorkl</span>
 <span class="card-arrow" aria-hidden="true">↗</span></a></div></section><footer><span>인공지능 활용 선도교사 연수 · 집합 10</span><span class="tag">AI·디지털 기반 교수학습 실행</span></footer></main><script>
 const LINK_URLS = [
       'https://drive.google.com/file/d/1FuF2n9QNrWSs0ONbS5bpnJBhr8sbs8rm/view?usp=sharing', // 1. 강의안
@@ -51,7 +51,7 @@ const LINK_URLS = [
       'https://drive.google.com/file/d/1HAGEqdi4JarbHlA-QNJVGt0-k6c4Lc7q/view?usp=sharing', // 9. 빈 버튼
       'https://notebook.google.com/notebook/ec5e15f3-07d8-4469-b12d-219c0f21f4f2?pli=1', // 10. 빈 버튼
       'https://app.briskteaching.com/ws/wnjrm8', // 11. 빈 버튼
-      '#' // 12. 빈 버튼
+      'https://student.snorkl.app/7jrwsv' // 12. 빈 버튼
 ];
 document.querySelectorAll('[data-link-id]').forEach(button=>{const index=Number(button.dataset.linkId)-1;button.href=LINK_URLS[index]||'#';button.addEventListener('click',event=>{if(!LINK_URLS[index]||LINK_URLS[index]==='#'){event.preventDefault();alert('아직 링크가 등록되지 않았습니다. HTML 파일의 LINK_URLS에 주소를 입력해 주세요.')}})});
 </script></body></html>
